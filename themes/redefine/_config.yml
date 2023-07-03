@@ -21,11 +21,11 @@ info:
 # IMAGE CONFIGURATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
 defaults:
   # Favicon
-  favicon: /images/my-logo-favicon.svg
+  favicon: https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg
   # Site logo
   logo: 
   # Site avatar
-  avatar: /images/my-logo-avatar.svg
+  avatar: https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-avatar.jpg
 # IMAGE CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 
@@ -116,7 +116,7 @@ home_banner:
     backing_speed: 80 # Backing speed (ms)
     starting_delay: 500 # Start delay (ms)
     backing_delay: 1500 # Backing delay (ms)
-    loop: true # Whether to loop
+    loop: false # Whether to loop
     smart_backspace: true # Whether to smart backspace
   # Color of home banner text
   text_color: 
