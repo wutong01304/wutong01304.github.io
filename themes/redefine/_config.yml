@@ -144,7 +144,7 @@ home_banner:
     enable: false
     # Social links
     links:
-      github:  # your GitHub URL
+      github: https://github.com/wutong01304
       instagram: # your Instagram URL
       zhihu:  # your ZhiHu URL
       twitter:  # your twitter URL
