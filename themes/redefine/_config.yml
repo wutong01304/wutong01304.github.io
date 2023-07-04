@@ -141,10 +141,10 @@ home_banner:
   # Home banner social links
   social_links:
     # Whether to enable
-    enable: true
+    enable: false
     # Social links
     links:
-      github: https://github.com/wutong01304
+      github: 
       instagram: # your Instagram URL
       zhihu:  # your ZhiHu URL
       twitter:  # your twitter URL
@@ -167,6 +167,9 @@ navbar:
     Home: 
       path: / 
       icon: fa-regular fa-house # can be empty
+    Github:
+      path: https://github.com/wutong01304
+      icon: github 
     # Archives: 
     #   path: /archives 
     #   icon: fa-regular fa-archive # can be empty
@@ -287,7 +290,7 @@ articles:
 # COMMENT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
 comment:
   # Whether to enable comment
-  enable: true
+  enable: false
   # Comment system
   system: waline # waline, gitalk, twikoo, giscus
   # System configuration
@@ -326,11 +329,11 @@ comment:
 # FOOTER >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
 footer:
   # Show website running time
-  runtime: true # show website running time or not
+  runtime: false # show website running time or not
   # Icon in footer, write fontawesome icon code here
   icon: '<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>'
   # The start time of the website, format: YYYY/MM/DD HH:mm:ss
-  start: 2022/8/17 11:45:14
+  start: 2023/7/1 11:45:14
   # Footer message
   customize:
   # ICP record number. See https://beian.miit.gov.cn/
