@@ -66,10 +66,10 @@ global:
     percentage: true # percentage
   # Website counter (powered by https://busuanzi.ibruce.info/)
   busuanzi_counter:
-    enable: true # enable website counter or not
-    site_pv: true # site page view
-    site_uv: true # site unique visitor
-    post_pv: true # post page view
+    enable: false # enable website counter or not
+    site_pv: false # site page view
+    site_uv: false # site unique visitor
+    post_pv: false # post page view
   # Whether to enable PJAX
   pjax: true
   # Whether to enable open graph
@@ -243,7 +243,7 @@ articles:
     link_icon: true # Whether to display link icon
   # Word count. Requires hexo-wordcount (npm install hexo-wordcount). See https://github.com/willin/hexo-wordcount
   word_count:
-    enable: true # Whether to enable
+    enable: false # Whether to enable
     count: true # Whether to display word count
     min2read: true # Whether to display reading time
   # Author label
@@ -262,7 +262,7 @@ articles:
   # Table of contents settings
   toc:
     enable: true # Whether to enable TOC
-    max_depth: 3 # TOC depth
+    max_depth: 2 # TOC depth
     number: false # Whether to add number to TOC automatically
     expand: true # Whether to expand TOC
     init_open: true # Open toc by default
