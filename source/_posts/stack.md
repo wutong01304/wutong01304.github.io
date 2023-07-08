@@ -1,7 +1,8 @@
 ---
 title: 栈溢出基础知识+函数调用过程
 date: 2023-07-05 22:19:26
-tags: [Stack,Basic Knowledge]
+tags: [Pwn,Stack,Basic Knowledge]
+cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stackcover.jpg"
 ---
 
 ------
