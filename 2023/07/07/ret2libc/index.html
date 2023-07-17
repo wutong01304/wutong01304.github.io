@@ -44,7 +44,7 @@
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret8.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/ret9.png?x-oss-process=style/watermark">
 <meta property="article:published_time" content="2023-07-07T10:29:01.000Z">
-<meta property="article:modified_time" content="2023-07-17T01:22:33.804Z">
+<meta property="article:modified_time" content="2023-07-17T06:39:47.736Z">
 <meta property="article:author" content="wutong">
 <meta property="article:tag" content="Pwn">
 <meta property="article:tag" content="Stack">
@@ -285,8 +285,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-07-17 09:22:33</span>
-            <span class="mobile">2023-07-17 09:22</span>
+            <span class="desktop">2023-07-17 14:39:47</span>
+            <span class="mobile">2023-07-17 14:39</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -403,7 +403,7 @@
                      data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/plt7.png?x-oss-process=style/watermark"
                      
                 ></p>
-<p>发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章中进行详细介绍。</p>
+<p>发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章<a href="https://wutong01304.github.io/2023/07/17/ret2dlruntime/">ret2_dl_runtime_reslove</a>中进行介绍。</p>
 <p>总结出第一次调用函数寻找地址的过程：xxx@plt -&gt; xxx@got -&gt; xxx@plt -&gt; 公共@plt -&gt; _dl_runtime_resolve</p>
 <p>流程图（图源网络：<a class="link"   target="_blank" rel="noopener" href="https://www.jianshu.com/p/0ac63c3744dd%EF%BC%89%EF%BC%9A" >https://www.jianshu.com/p/0ac63c3744dd）： <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
 <p>第一次调用：</p>
@@ -534,7 +534,7 @@
         <li><strong>Created at:</strong> 2023-07-07 18:29:01</li>
         
             <li>
-                <strong>Updated at:</strong> 2023-07-17 09:22:33
+                <strong>Updated at:</strong> 2023-07-17 14:39:47
             </li>
         
         <li>
