@@ -97,11 +97,9 @@ p.interactive()
 
 <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le11.png?x-oss-process=style/watermark" style="zoom:80%;" />
 
-# 二、ret2_dl_runtime_resolve
+# 二、基本原理
 
-参考链接：[Advanced ROP (yuque.com)](https://www.yuque.com/hxfqg9/bin/erh0l7)
-
-## 2.1基本原理
+参考链接：[Advanced ROP (yuque.com)](https://www.yuque.com/hxfqg9/bin/erh0l7)  
 
 _dl_runtime_resolve(link_map_obj, reloc_index)是进行延迟绑定的时候重定位的，在第一次调用函数的时候，它会去寻找函数的真实地址，过程如下：
 
@@ -207,11 +205,11 @@ si单步步入：
 
 <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d11.png" style="zoom:80%;" />
 
-## 2.2 攻击原理
+# 三、攻击原理
 
 我们知道，dl_runtime_resolve 是通过最后的 st_name 来确定执行那一个函数的，也就是说，可以通过控制这个地址的内容来执行任意函数，比如：system。而 reloc_arg 是我们可控的，我们需要把 reloc_arg 可控间接控制 st_name。我们可以在一段地址上伪造一段结构直接修改 .dynstr。
 
-### 2.2.1 **reloc_arg**
+## 3.1 **reloc_arg**
 
 利用reloc_arg来调用 write 函数，就是跳到plt0地址，获取link_map的地址，然后输入reloc_arg其实便可以调用write函数了。
 
@@ -267,7 +265,7 @@ r.interactive()
 
 成功打印 bin/sh 就是执行成功了。
 
-### 2.2.2 Elf32_Rel
+## 3.2 Elf32_Rel
 
 尝试伪造一个Elf32_Rel结构体。同样控制 dl_resolve 函数中的 reloc_arg参数，不过这次控制其指向我们伪造的 write 重定位项，即r_offset，r_info。
 
@@ -323,7 +321,7 @@ r.interactive()
 
 成功打印 bin/sh 就是执行成功了。
 
-### **2.2.3 .dynsym**
+## **3.3 .dynsym**
 
 上一节中，我们控制了Elf32_Rel。如果之后想调用system函数，那么r_info和r_offset肯定不能通过我们使用readelf自己读出。
 
@@ -412,7 +410,7 @@ r.interactive()
 
 成功打印 bin/sh 就是执行成功了
 
-### 2.2.4 .dynstr
+## 3.4 .dynstr
 
 我们知道.dynstr+name_offset=std_name，name_offset在上节已经由我们控制，只要接下来伪造.dynstr，就可以控制std_name（函数名），让dlresolve去寻找我们想要执行的函数
 
@@ -474,7 +472,7 @@ r.sendline(rop.chain())#第2段rop
 r.interactive()
 ```
 
-### **2.2.5 system**
+## **3.5 system**
 
 由于dl_resolve 最终依赖的是我们所给定的字符串，即使我们给了一个假的字符串它仍然会去解析并执行。因此我们只需要将原先的 write 字符串修改为 system 字符串，同时修改 write 的参数为 system 的参数即可获取 shell。即rop.raw('system\x00')：
 

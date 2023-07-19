@@ -127,11 +127,11 @@ objdump -d test
 
 第一次调用：
 
-![](https://upload-images.jianshu.io/upload_images/5970003-bcf9343191848103.png?imageMogr2/auto-orient/strip|imageView2/2/format/webp)
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/5970003-bcf9343191848103.png)
 
 之后进行调用：
 
-![](https://upload-images.jianshu.io/upload_images/5970003-9baedd55881a39dd.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/5970003-9baedd55881a39dd.png)
 
 # 二、ret2libc
 
