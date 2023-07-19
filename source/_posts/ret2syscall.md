@@ -1,6 +1,6 @@
 ---
 title: ret2syscall+mprotect函数介绍
-date: 2023-07-11 21:49:25
+date: 2023-07-09 21:49:25
 tags: [Pwn,Stack,ret2syscall]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscover.jpg"
 ---
@@ -45,15 +45,15 @@ execve 系统调用号为11，换算成16进制，也就是0xb。因此想要构
 
 <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscall/sys2.png?x-oss-process=style/watermark" style="zoom:80%;" />
 
-除了INT 80中断外，x64架构的Linux系统还使用其他类型的系统调用，例如通过软中断（signal）实现信号处理等。这将会在下一篇博客中进行介绍。
+除了INT 80中断外，x64架构的Linux系统还使用其他类型的系统调用，例如通过软中断（signal）实现信号处理等。这将会在另外一篇博客[SROP](https://wutong01304.github.io/2023/07/15/SROP/)中进行介绍。
 
 ## 1.3 例子1
 
-例题：https://github.com/ctf-wiki/ctf-wiki/raw/master/pwn/stackoverflow/example/ret2syscall/rop
+例题：https://github.com/ctf-wiki/ctf-challenges/blob/master/pwn/stackoverflow/ret2syscall/bamboofox-ret2syscall/rop 
 
 参考了yinchen大佬的视频：https://www.bilibili.com/video/BV177411p7Hu/?spm_id_from=333.999.0.0&vd_source=4481f768294d5110af6b9e0ab6a40ddd
 
-视频下面也给出了这道题目的附件：https://pan.baidu.com/s/1fbeBjaoX-rmW_BZRT7lxbg
+视频下面也给出了这道题目的附件：https://pan.baidu.com/s/1fbeBjaoX-rmW_BZRT7lxbg  （跟题目是一个文件，上面下载不了可以下这个）
 
 反汇编查看main函数：
 

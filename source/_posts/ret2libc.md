@@ -119,7 +119,7 @@ objdump -d test
 
 ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libc/plt7.png?x-oss-process=style/watermark)
 
-发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章中进行详细介绍。
+发现里面是**_dl_runtime_resolve**函数，其作用是在程序运行时动态解析符号（函数或变量）的地址，将在另外一篇文章[ret2_dl_runtime_reslove](https://wutong01304.github.io/2023/07/13/ret2dlruntime/)中进行介绍。
 
 总结出第一次调用函数寻找地址的过程：xxx@plt -> xxx@got -> xxx@plt -> 公共@plt -> _dl_runtime_resolve
 
