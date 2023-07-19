@@ -13,7 +13,7 @@
     
     <!--- Seo Part-->
     
-    <link rel="canonical" href="https://wutong01304.github.io/2023/07/11/ret2syscall/"/>
+    <link rel="canonical" href="https://wutong01304.github.io/2023/07/09/ret2syscall/"/>
     <meta name="robots" content="index,follow">
     <meta name="googlebot" content="index,follow">
     <meta name="revisit-after" content="1 days">
@@ -21,7 +21,7 @@
         <meta name="description" content="ret2syscall 即控制程序执行系统调用来获取 shell。当发现没有system可以直接调用，并且发现通过函数泄露地址去猜libc也不太适用，没法泄露和计算libc的加载基地址的时候，就要使用ret2syscall。 一、ret2syscall1.1 介绍ret2syscall，顾名思义，就是将返回地址指向系统调用函数，从而实现在用户态执行特权指令的目的。 函数系统调用，指运行在用户空间的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ret2syscall+mprotect函数介绍">
-<meta property="og:url" content="https://wutong01304.github.io/2023/07/11/ret2syscall/index.html">
+<meta property="og:url" content="https://wutong01304.github.io/2023/07/09/ret2syscall/index.html">
 <meta property="og:site_name" content="wutong">
 <meta property="og:description" content="ret2syscall 即控制程序执行系统调用来获取 shell。当发现没有system可以直接调用，并且发现通过函数泄露地址去猜libc也不太适用，没法泄露和计算libc的加载基地址的时候，就要使用ret2syscall。 一、ret2syscall1.1 介绍ret2syscall，顾名思义，就是将返回地址指向系统调用函数，从而实现在用户态执行特权指令的目的。 函数系统调用，指运行在用户空间的">
 <meta property="og:locale" content="en_US">
@@ -51,8 +51,8 @@
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscall/m3.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscall/m5.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscall/m4.png?x-oss-process=style/watermark">
-<meta property="article:published_time" content="2023-07-11T13:49:25.000Z">
-<meta property="article:modified_time" content="2023-07-17T06:41:29.432Z">
+<meta property="article:published_time" content="2023-07-09T13:49:25.000Z">
+<meta property="article:modified_time" content="2023-07-18T13:09:41.218Z">
 <meta property="article:author" content="wutong">
 <meta property="article:tag" content="Pwn">
 <meta property="article:tag" content="Stack">
@@ -286,15 +286,15 @@
                             <div class="article-meta-info">
     <span class="article-date article-meta-item">
         <i class="fa-regular fa-pen-fancy"></i>&nbsp;
-        <span class="desktop">2023-07-11 21:49:25</span>
-        <span class="mobile">2023-07-11 21:49</span>
+        <span class="desktop">2023-07-09 21:49:25</span>
+        <span class="mobile">2023-07-09 21:49</span>
         <span class="hover-info">Created</span>
     </span>
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-07-17 14:41:29</span>
-            <span class="mobile">2023-07-17 14:41</span>
+            <span class="desktop">2023-07-18 21:09:41</span>
+            <span class="mobile">2023-07-18 21:09</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -368,10 +368,10 @@
                       style="zoom:80%;" 
                 >
 
-<p>除了INT 80中断外，x64架构的Linux系统还使用其他类型的系统调用，例如通过软中断（signal）实现信号处理等。这将会在另外一篇博客<a href="https://wutong01304.github.io/2023/07/17/SROP/">SROP</a>中进行介绍。</p>
-<h2 id="1-3-例子1"><a href="#1-3-例子1" class="headerlink" title="1.3 例子1"></a>1.3 例子1</h2><p>例题：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ctf-wiki/ctf-wiki/raw/master/pwn/stackoverflow/example/ret2syscall/rop" >https://github.com/ctf-wiki/ctf-wiki/raw/master/pwn/stackoverflow/example/ret2syscall/rop <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>除了INT 80中断外，x64架构的Linux系统还使用其他类型的系统调用，例如通过软中断（signal）实现信号处理等。这将会在另外一篇博客<a href="https://wutong01304.github.io/2023/07/15/SROP/">SROP</a>中进行介绍。</p>
+<h2 id="1-3-例子1"><a href="#1-3-例子1" class="headerlink" title="1.3 例子1"></a>1.3 例子1</h2><p>例题：<a class="link"   target="_blank" rel="noopener" href="https://github.com/ctf-wiki/ctf-challenges/blob/master/pwn/stackoverflow/ret2syscall/bamboofox-ret2syscall/rop" >https://github.com/ctf-wiki/ctf-challenges/blob/master/pwn/stackoverflow/ret2syscall/bamboofox-ret2syscall/rop <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> </p>
 <p>参考了yinchen大佬的视频：<a class="link"   target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV177411p7Hu/?spm_id_from=333.999.0.0&vd_source=4481f768294d5110af6b9e0ab6a40ddd" >https://www.bilibili.com/video/BV177411p7Hu/?spm_id_from=333.999.0.0&amp;vd_source=4481f768294d5110af6b9e0ab6a40ddd <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
-<p>视频下面也给出了这道题目的附件：<a class="link"   target="_blank" rel="noopener" href="https://pan.baidu.com/s/1fbeBjaoX-rmW_BZRT7lxbg" >https://pan.baidu.com/s/1fbeBjaoX-rmW_BZRT7lxbg <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>视频下面也给出了这道题目的附件：<a class="link"   target="_blank" rel="noopener" href="https://pan.baidu.com/s/1fbeBjaoX-rmW_BZRT7lxbg" >https://pan.baidu.com/s/1fbeBjaoX-rmW_BZRT7lxbg <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a>  （跟题目是一个文件，上面下载不了可以下这个）</p>
 <p>反汇编查看main函数：</p>
 <img  
                      lazyload
@@ -617,14 +617,14 @@
     <ul>
         <li><strong>Title:</strong> ret2syscall+mprotect函数介绍</li>
         <li><strong>Author:</strong> wutong</li>
-        <li><strong>Created at:</strong> 2023-07-11 21:49:25</li>
+        <li><strong>Created at:</strong> 2023-07-09 21:49:25</li>
         
             <li>
-                <strong>Updated at:</strong> 2023-07-17 14:41:29
+                <strong>Updated at:</strong> 2023-07-18 21:09:41
             </li>
         
         <li>
-            <strong>Link:</strong> https://wutong01304.github.io/2023/07/11/ret2syscall/
+            <strong>Link:</strong> https://wutong01304.github.io/2023/07/09/ret2syscall/
         </li>
         <li>
             <strong>License:</strong> This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>.
@@ -661,7 +661,7 @@
                         <div class="article-prev">
                             <a class="prev"
                             rel="prev"
-                            href="/2023/07/13/ret2csu/"
+                            href="/2023/07/11/ret2csu/"
                             >
                                 <span class="left arrow-icon flex-center">
                                     <i class="fa-solid fa-chevron-left"></i>

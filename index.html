@@ -249,7 +249,7 @@
                 </div>
                 <div class="statistics">
                     <a class="item" href="/tags">
-                        <div class="number">6</div>
+                        <div class="number">9</div>
                         <div class="label">Tags</div>
                     </a>
                     <a class="item" href="/categories">
@@ -280,59 +280,29 @@
                 
 
                 
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/15/SROP/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROPcover.jpg" alt="SROP" />
+                        </a>
+                    </div>
+                
 
                 <h3 class="home-article-title">
-                    <a href="/2023/07/17/SROP/">
+                    <a href="/2023/07/15/SROP/">
                         SROP
                     </a>
                 </h3>
 
                 <div class="home-article-content markdown-body">
                     
-                        
+                        在之前的文章中，我们介绍了ret2syscall，即控制程序执行系统调用。而SROP就是利用一个名为 sigreturn 的系统调用进行返回导向编程。与ROP相比，SROP具有可重用性，不太依赖于可执行文件的内容，这使得在大量应用程序中重用相同的SR...
                     
                 </div>
 
                 <div class="home-article-meta-info-container">
     <div class="home-article-meta-info">
         <span><i class="fa-solid fa-calendars"></i>&nbsp;
-            <span class="home-article-date" data-date="Mon Jul 17 2023 14:08:30 GMT+0800">
-                
-                    2023-07-17
-                
-            </span>
-        </span>
-        
-        
-    </div>
-
-    <a href="/2023/07/17/SROP/">Read more<span class="seo-reader-text">SROP</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
-</div>
-
-            </li>
-        
-            <li class="home-article-item">
-
-                
-
-                
-
-                <h3 class="home-article-title">
-                    <a href="/2023/07/15/ret2dlruntime/">
-                        ret2dlruntime
-                    </a>
-                </h3>
-
-                <div class="home-article-content markdown-body">
-                    
-                        
-                    
-                </div>
-
-                <div class="home-article-meta-info-container">
-    <div class="home-article-meta-info">
-        <span><i class="fa-solid fa-calendars"></i>&nbsp;
-            <span class="home-article-date" data-date="Sat Jul 15 2023 14:05:54 GMT+0800">
+            <span class="home-article-date" data-date="Sat Jul 15 2023 14:08:30 GMT+0800">
                 
                     2023-07-15
                 
@@ -340,45 +310,31 @@
         </span>
         
         
-    </div>
-
-    <a href="/2023/07/15/ret2dlruntime/">Read more<span class="seo-reader-text">ret2dlruntime</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
-</div>
-
-            </li>
-        
-            <li class="home-article-item">
-
-                
-
-                
-
-                <h3 class="home-article-title">
-                    <a href="/2023/07/13/ret2csu/">
-                        ret2csu
-                    </a>
-                </h3>
-
-                <div class="home-article-content markdown-body">
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
                     
-                        
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
                     
-                </div>
-
-                <div class="home-article-meta-info-container">
-    <div class="home-article-meta-info">
-        <span><i class="fa-solid fa-calendars"></i>&nbsp;
-            <span class="home-article-date" data-date="Thu Jul 13 2023 14:04:22 GMT+0800">
-                
-                    2023-07-13
-                
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/SROP/">SROP</a>&nbsp;
+                        </li>
+                    
+                </ul>
             </span>
-        </span>
-        
         
     </div>
 
-    <a href="/2023/07/13/ret2csu/">Read more<span class="seo-reader-text">ret2csu</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+    <a href="/2023/07/15/SROP/">Read more<span class="seo-reader-text">SROP</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
 </div>
 
             </li>
@@ -389,14 +345,142 @@
 
                 
                     <div class="home-article-thumbnail">
-                        <a href="/2023/07/11/ret2syscall/">
+                        <a href="/2023/07/13/ret2dlruntime/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dlruncover.jpg" alt="栈迁移+ret2_dl_runtime_reslove" />
+                        </a>
+                    </div>
+                
+
+                <h3 class="home-article-title">
+                    <a href="/2023/07/13/ret2dlruntime/">
+                        栈迁移+ret2_dl_runtime_reslove
+                    </a>
+                </h3>
+
+                <div class="home-article-content markdown-body">
+                    
+                        在之前的博客中，我们介绍了延迟绑定机制 。我们知道在linux中是利用_dl_runtime_resolve(link_map_obj, reloc_index)来对动态链接的函数进行重定位的，如果我们可以控制相应的参数及其对应地址内容，就可以控制解...
+                    
+                </div>
+
+                <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Thu Jul 13 2023 14:05:54 GMT+0800">
+                
+                    2023-07-13
+                
+            </span>
+        </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/ret2-dl-runtime-resolve/">ret2_dl_runtime_resolve</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2023/07/13/ret2dlruntime/">Read more<span class="seo-reader-text">栈迁移+ret2_dl_runtime_reslove</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/11/ret2csu/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2csucover.jpg" alt="ret2csu" />
+                        </a>
+                    </div>
+                
+
+                <h3 class="home-article-title">
+                    <a href="/2023/07/11/ret2csu/">
+                        ret2csu
+                    </a>
+                </h3>
+
+                <div class="home-article-content markdown-body">
+                    
+                        在x64中，在 64 位程序中，函数的前 6 个参数是通过寄存器传递的，但是大多数时候，我们很难找到每一个寄存器对应的gadgets。这时，我们就要开始考虑通过调用__libc_csu_init函数来实现传递参数的效果，这种实现方式，称为 ret2c...
+                    
+                </div>
+
+                <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Tue Jul 11 2023 14:04:22 GMT+0800">
+                
+                    2023-07-11
+                
+            </span>
+        </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/ret2csu/">ret2csu</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2023/07/11/ret2csu/">Read more<span class="seo-reader-text">ret2csu</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/09/ret2syscall/">
                             <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscover.jpg" alt="ret2syscall+mprotect函数介绍" />
                         </a>
                     </div>
                 
 
                 <h3 class="home-article-title">
-                    <a href="/2023/07/11/ret2syscall/">
+                    <a href="/2023/07/09/ret2syscall/">
                         ret2syscall+mprotect函数介绍
                     </a>
                 </h3>
@@ -411,9 +495,9 @@
                 <div class="home-article-meta-info-container">
     <div class="home-article-meta-info">
         <span><i class="fa-solid fa-calendars"></i>&nbsp;
-            <span class="home-article-date" data-date="Tue Jul 11 2023 21:49:25 GMT+0800">
+            <span class="home-article-date" data-date="Sun Jul 09 2023 21:49:25 GMT+0800">
                 
-                    2023-07-11
+                    2023-07-09
                 
             </span>
         </span>
@@ -443,7 +527,7 @@
         
     </div>
 
-    <a href="/2023/07/11/ret2syscall/">Read more<span class="seo-reader-text">ret2syscall+mprotect函数介绍</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+    <a href="/2023/07/09/ret2syscall/">Read more<span class="seo-reader-text">ret2syscall+mprotect函数介绍</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
 </div>
 
             </li>

