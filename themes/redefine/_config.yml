@@ -158,6 +158,14 @@ navbar:
   # Auto hide navbar
   auto_hide: false
   # Navbar background color
+  tags:
+    Tags: 
+        icon: fa-solid fa-tags 
+        path: /tags/ 
+  categories:
+    Categories: 
+        icon: fa-solid fa-folder 
+        path: /categories/ 
   color:
     left: "#f78736" #left side 
     right: "#367df7"  #right side

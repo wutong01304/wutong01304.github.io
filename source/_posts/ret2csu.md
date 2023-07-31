@@ -3,6 +3,7 @@ title: ret2csu
 date: 2023-07-11 14:04:22
 tags: [Pwn,Stack,ret2csu]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2csucover.jpg"
+categories: [Study]
 ---
 
 

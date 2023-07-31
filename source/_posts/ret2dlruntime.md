@@ -3,6 +3,7 @@ title: 栈迁移+ret2_dl_runtime_reslove
 date: 2023-07-13 14:05:54
 tags: [Pwn,Stack,ret2_dl_runtime_resolve]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dlruncover.jpg"
+categories: [Study]
 ---
 
 

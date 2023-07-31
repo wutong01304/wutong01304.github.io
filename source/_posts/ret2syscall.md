@@ -3,6 +3,7 @@ title: ret2syscall+mprotect函数介绍
 date: 2023-07-09 21:49:25
 tags: [Pwn,Stack,ret2syscall]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscover.jpg"
+categories: [Study]
 ---
 
 ret2syscall 即控制程序执行系统调用来获取 shell。当发现没有system可以直接调用，并且发现通过函数泄露地址去猜libc也不太适用，没法泄露和计算libc的加载基地址的时候，就要使用ret2syscall。

@@ -3,6 +3,7 @@ title: ret2libc+延迟绑定机制
 date: 2023-07-07 18:29:01
 tags: [Pwn,Stack,ret2libc]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libcover.jpg"
+categories: [Study]
 ---
 
 

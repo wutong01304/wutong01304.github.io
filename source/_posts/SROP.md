@@ -3,6 +3,7 @@ title: SROP
 date: 2023-07-15 14:08:30
 tags: [Pwn,Stack,SROP]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/SROPcover.jpg"
+categories: [Study]
 ---
 
 在之前的文章中，我们介绍了[ret2syscall](https://wutong01304.github.io/2023/07/09/ret2syscall/)，即控制程序执行系统调用。而SROP就是利用一个名为 sigreturn 的系统调用进行返回导向编程。与ROP相比，SROP具有可重用性，不太依赖于可执行文件的内容，这使得在大量应用程序中重用相同的SROP代码成为可能。除此之外，SROP还适用于不同的指令集体系结构和操作系统。

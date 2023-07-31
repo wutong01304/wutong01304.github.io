@@ -3,6 +3,7 @@ title: Hexo+github搭建个人博客
 date: 2023-07-02 21:23:30
 tags: [搭建博客]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/hexocover.jpg"
+categories: [Study]
 ---
 
 ------
