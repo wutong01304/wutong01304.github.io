@@ -18,12 +18,12 @@
     <meta name="googlebot" content="index,follow">
     <meta name="revisit-after" content="1 days">
     
-        <meta name="description" content="RSA是一种非对称加密算法，使用两个密钥，一个用来加密消息和验证数字签名，称为公钥，另一个用来解密，称为私钥。公钥通常是公开的，用于加密会话密钥、验证数字签名或加密可以用相应的私钥解密的数据。私钥则是非公开的，用于解密由公钥加密的数据。本文介绍一些RSA的攻击方法。  一、基本原理1.1 RSA算法 任意选取两个不同的大素数p和q计算乘积$$n&#x3D;pq，φ(n)&#x3D;(p-1)(q-">
+        <meta name="description" content="MathJax.Hub.Config({             tex2jax: {             skipTags: [&#39;script&#39;, &#39;noscript&#39;, &#39;style&#39;, &#39;textarea&#39;, &#39;pre&#39;],             inlineMath: [[&#39;$&#39;,&#39;$&#39;]]             }         });">
 <meta property="og:type" content="article">
-<meta property="og:title" content="RSA">
+<meta property="og:title" content="RSA基本原理+常见攻击方法">
 <meta property="og:url" content="https://wutong01304.github.io/2023/07/21/RSA/index.html">
 <meta property="og:site_name" content="wutong">
-<meta property="og:description" content="RSA是一种非对称加密算法，使用两个密钥，一个用来加密消息和验证数字签名，称为公钥，另一个用来解密，称为私钥。公钥通常是公开的，用于加密会话密钥、验证数字签名或加密可以用相应的私钥解密的数据。私钥则是非公开的，用于解密由公钥加密的数据。本文介绍一些RSA的攻击方法。  一、基本原理1.1 RSA算法 任意选取两个不同的大素数p和q计算乘积$$n&#x3D;pq，φ(n)&#x3D;(p-1)(q-">
+<meta property="og:description" content="MathJax.Hub.Config({             tex2jax: {             skipTags: [&#39;script&#39;, &#39;noscript&#39;, &#39;style&#39;, &#39;textarea&#39;, &#39;pre&#39;],             inlineMath: [[&#39;$&#39;,&#39;$&#39;]]             }         });">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/r1.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/r2.png?x-oss-process=style/watermark">
@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/r5.png?x-oss-process=style/watermark">
 <meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/r6.png?x-oss-process=style/watermark">
 <meta property="article:published_time" content="2023-07-21T02:46:36.000Z">
-<meta property="article:modified_time" content="2023-07-31T06:07:57.088Z">
+<meta property="article:modified_time" content="2023-07-31T06:28:45.782Z">
 <meta property="article:author" content="wutong">
 <meta property="article:tag" content="Crypto">
 <meta property="article:tag" content="RSA">
@@ -49,7 +49,7 @@
     
     <title>
         
-            RSA -
+            RSA基本原理+常见攻击方法 -
         
         wutong
     </title>
@@ -242,8 +242,8 @@
             
              
                 <div class="article-title">         
-                    <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSAcover.jpg" alt="RSA" />
-                    <h1 class="article-title-cover">RSA</h1>
+                    <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSAcover.jpg" alt="RSA基本原理+常见攻击方法" />
+                    <h1 class="article-title-cover">RSA基本原理+常见攻击方法</h1>
                 </div>
             
                 
@@ -272,8 +272,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-07-31 14:07:57</span>
-            <span class="mobile">2023-07-31 14:07</span>
+            <span class="desktop">2023-07-31 14:28:45</span>
+            <span class="mobile">2023-07-31 14:28</span>
             <span class="hover-info">Updated</span>
         </span>
     
@@ -319,10 +319,22 @@
             
 
             <div class="article-content markdown-body">
-                <p>RSA是一种非对称加密算法，使用两个密钥，一个用来加密消息和验证数字签名，称为公钥，另一个用来解密，称为私钥。公钥通常是公开的，用于加密会话密钥、验证数字签名或加密可以用相应的私钥解密的数据。私钥则是非公开的，用于解密由公钥加密的数据。本文介绍一些RSA的攻击方法。</p>
+                <head>
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+            inlineMath: [['$','$']]
+            }
+        });
+    </script>
+</head>
+
+<p>RSA是一种非对称加密算法，使用两个密钥，一个用来加密消息和验证数字签名，称为公钥，另一个用来解密，称为私钥。公钥通常是公开的，用于加密会话密钥、验证数字签名或加密可以用相应的私钥解密的数据。私钥则是非公开的，用于解密由公钥加密的数据。本文介绍一些RSA的攻击方法。</p>
 <hr>
 <h1 id="一、基本原理"><a href="#一、基本原理" class="headerlink" title="一、基本原理"></a>一、基本原理</h1><h2 id="1-1-RSA算法"><a href="#1-1-RSA算法" class="headerlink" title="1.1 RSA算法"></a>1.1 RSA算法</h2><ol>
-<li><p>任意选取两个不同的大素数p和q计算乘积<br>$$<br>n&#x3D;pq，φ(n)&#x3D;(p-1)(q-1)<br>$$</p>
+<li><p>任意选取两个不同的大素数p和q计算乘积<br>$$<br>n&#x3D;pq,φ(n)&#x3D;(p-1)(q-1)<br>$$</p>
 </li>
 <li><p>任意选取一个大整数e，满足<br>$$<br>gcd⁡(e,φ(n))&#x3D;1<br>$$<br>整数e用做加密钥（注意：e的选取是很容易的，例如，所有大于p和q的素数都可用</p>
 </li>
@@ -447,12 +459,12 @@
                 <div class="post-copyright-info">
                     <div class="article-copyright-info-container">
     <ul>
-        <li><strong>Title:</strong> RSA</li>
+        <li><strong>Title:</strong> RSA基本原理+常见攻击方法</li>
         <li><strong>Author:</strong> wutong</li>
         <li><strong>Created at:</strong> 2023-07-21 10:46:36</li>
         
             <li>
-                <strong>Updated at:</strong> 2023-07-31 14:07:57
+                <strong>Updated at:</strong> 2023-07-31 14:28:45
             </li>
         
         <li>
@@ -514,7 +526,7 @@
                 <div class="post-toc-wrap">
     <div class="post-toc">
         <div class="toc-title">On this page</div>
-        <div class="page-title">RSA</div>
+        <div class="page-title">RSA基本原理+常见攻击方法</div>
         <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">一、基本原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-RSA%E7%AE%97%E6%B3%95"><span class="nav-text">1.1 RSA算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E8%AF%81%E6%98%8E"><span class="nav-text">1.2 证明</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81-%E5%B7%B2%E7%9F%A5-dp%E3%80%81dq%E3%80%81p%E3%80%81q%E3%80%81c-%E6%B1%82m"><span class="nav-text">二、 已知 dp、dq、p、q、c 求m</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%8E%9F%E7%90%86"><span class="nav-text">2.1 原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E4%BE%8B%E5%AD%90"><span class="nav-text">2.2 例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81-%E5%B7%B2%E7%9F%A5c1%E3%80%81c2%E3%80%81e1%E3%80%81e2%E3%80%81n%E6%B1%82m"><span class="nav-text">三、 已知c1、c2、e1、e2、n求m</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%8E%9F%E7%90%86"><span class="nav-text">3.1 原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E4%BE%8B%E5%AD%90"><span class="nav-text">3.2 例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9B-%E5%B7%B2%E7%9F%A5c%E3%80%81dp%E3%80%81n%E3%80%81e%E6%B1%82m"><span class="nav-text">四 已知c、dp、n、e求m</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%8E%9F%E7%90%86"><span class="nav-text">4.1 原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E4%BE%8B%E5%AD%90"><span class="nav-text">4.2 例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%94%E3%80%81-%E5%B7%B2%E7%9F%A5n%E3%80%81c%E3%80%81e-%E6%B1%82m%E3%80%82%EF%BC%88n%E5%BE%88%E5%A4%A7%EF%BC%8Ce%E5%BE%88%E5%B0%8F%EF%BC%89"><span class="nav-text">五、 已知n、c、e 求m。（n很大，e很小）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E5%8E%9F%E7%90%86"><span class="nav-text">5.1 原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E4%BE%8B%E5%AD%90"><span class="nav-text">5.2 例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%AD%E3%80%81-%E4%BD%8E%E5%8A%A0%E5%AF%86%E6%8C%87%E6%95%B0%E5%B9%BF%E6%92%AD%E6%94%BB%E5%87%BB%EF%BC%88%E6%A8%A1%E6%95%B0n%E3%80%81%E5%AF%86%E6%96%87c%E4%B8%8D%E5%90%8C%EF%BC%8C%E6%98%8E%E6%96%87m%E3%80%81%E5%8A%A0%E5%AF%86%E6%8C%87%E6%95%B0e%E7%9B%B8%E5%90%8C%EF%BC%89"><span class="nav-text">六、 低加密指数广播攻击（模数n、密文c不同，明文m、加密指数e相同）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%8E%9F%E7%90%86"><span class="nav-text">6.1 原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2%E3%80%81%E4%BE%8B%E5%AD%90"><span class="nav-text">6.2、例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E4%BD%8E%E8%A7%A3%E5%AF%86%E6%8C%87%E6%95%B0%E6%94%BB%E5%87%BB%EF%BC%88%E5%B7%B2%E7%9F%A5n%E3%80%81e%EF%BC%8C%E6%B1%82d%EF%BC%9Be%E5%BE%88%E5%A4%A7%EF%BC%8Cd%E5%BE%88%E5%B0%8F%EF%BC%89"><span class="nav-text">七、低解密指数攻击（已知n、e，求d；e很大，d很小）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E5%8E%9F%E7%90%86"><span class="nav-text">7.1 原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E4%BE%8B%E5%AD%90"><span class="nav-text">7.2 例子</span></a></li></ol></li></ol>
 
     </div>
