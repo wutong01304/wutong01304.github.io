@@ -90,7 +90,7 @@ print p.recvall()
 
 ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/tricks/ar10.png?x-oss-process=style/watermark)
 
-## 二、environ
+# 二、environ
 
 ## 2.1 介绍
 

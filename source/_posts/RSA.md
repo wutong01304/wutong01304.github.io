@@ -1,14 +1,13 @@
 ---
-title: RSA
+title: RSA基本原理+常见攻击方法
 date: 2023-07-21 10:46:36
 tags: [Crypto,RSA]
 cover: "https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSAcover.jpg"
 categories: [Study]
 ---
 
-
-
 RSA是一种非对称加密算法，使用两个密钥，一个用来加密消息和验证数字签名，称为公钥，另一个用来解密，称为私钥。公钥通常是公开的，用于加密会话密钥、验证数字签名或加密可以用相应的私钥解密的数据。私钥则是非公开的，用于解密由公钥加密的数据。本文介绍一些RSA的攻击方法。
+
 
 ------
 
@@ -17,67 +16,60 @@ RSA是一种非对称加密算法，使用两个密钥，一个用来加密消�
 ## 1.1 RSA算法
 
 1. 任意选取两个不同的大素数p和q计算乘积
-   $$
-   n=pq，φ(n)=(p-1)(q-1)
-   $$
-   
+
+   ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/1.png)
+
 2. 任意选取一个大整数e，满足
-   $$
-   gcd⁡(e,φ(n))=1
-   $$
+
+   ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/2.png)
+
    整数e用做加密钥（注意：e的选取是很容易的，例如，所有大于p和q的素数都可用
 
 3. 确定的解密钥d，满足
-   $$
-   (de)\;mod\;φ(n)=1
-   $$
+
+   ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/3.png)
+
    即de是一个任意的整数
-   $$
-   de=kφ(n)+1
-   $$
+
+   ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/4.png)
+
    所以，若知道 e 和 φ(n )，则很容易计算出d ；
 
 4. 公开整数n和e，秘密保存d ；
 
 5. 将明文m（m<n是一个整数）加密成密文c，加密算法为
-   $$
-   c=E(m)=m^e\; mod\;n
-   $$
+
+   ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/5.png)
+
    
+
 6. 将密文c解密为明文m，解密算法为
-   $$
-   m=D(c)=c^d \;mod\; n
-   $$
-   
+
+   ![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/6.png)
+
 
 这样我们可以得到 公钥对（n,e）、 私钥对（n,d）
 
 ## 1.2 证明
 
-$$
-m=c^d \;mod\;n
-$$
-已知
-$$
-m≡c^d (mod\;n)≡m^{ed} (mod\;n)≡m^{kφ(n)+1} mod\;n
-$$
-由欧拉定理可知
-$$
-m^{φ(n)} ≡1(mod\;n) 、  m^{kφ(n)} ≡1^k (mod\;n)
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/7.png)
 
-$$
-m^ {kφ(n)}  ≡1(mod\;n)    、   m^{kφ(n)+1}≡m(mod\;n)
-$$
+已知
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/8.png)
+
+由欧拉定理可知
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/9.png)
 
 ​	补：e与φ(n)不互素时，
-$$
-c=m^e mod\;n
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/10.png)
+
 可以转化为
-$$
-c=m^{2\,× \, e/2} mod\;n
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/11.png)
+
 此时就满足互素的条件，因此求解时，需要对m开根号
 
 ------
@@ -86,45 +78,33 @@ $$
 
 ## 2.1 原理
 
-已知另：
-$$
-dp≡d\;mod\;(p-1) 、    dq≡d\;mod\;(q-1)
-$$
+已知：
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/12.png)
+
 推论：
-$$
-m1≡c^d (mod\;p) 、   m2≡c^d (mod\;q)
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/13.png)
 
 证明：
-$$
-m=c^d mod\; n=c^d+kn=c^d+kpq
-$$
- 同时取余p,q，即证明成立
-$$
-c^d=kp+m1 \quad→ \quad m2≡(kp+m1)  mod\;q \quad →\quad  m2-m1≡kp \;mod\; q
-$$
 
-$$
-(m2-m1)×p^{-1}≡k \;mod\; q \quad →\quad  k≡(m2-m1)×p^{-1}  mod \;q
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/14.png)
+
+ 同时取余p,q，即证明成立
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/15.png)
 
 合并得：
-$$
-c^d=((m2-m1)*p^{-1}  mod \;q)*p+m1
-$$
-即：
-$$
-m=(((m2-m1)*p^{-1}  mod \; q)*p+m1 )(mod\;n)
-$$
 
-$$
-m1≡c^{dp \;mod\; p-1} (mod\;p)  、   m2≡ c^{dq\; mod\; q-1} (modq)
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/16.png)
+
+即：
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/17.png)
 
 费马小定理推出：
-$$
-m1=c^{dp} mod\; p   、    m2=c^{dq}mod \;q
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/18.png)
 
 ## 2.2 例子
 
@@ -159,52 +139,38 @@ print(bytes.fromhex(hex(m)[2:]))       #16进制转文本
 ## 3.1 原理
 
 共模数攻击。通过扩展欧几里得算法，可以找到整数a、b使得
-$$
-若\quad ae_1+be_2=1
-$$
 
-$$
-则\quad c_1^a\; c_2^b≡m^{ae_1+be_2 } ≡m \;mod \;n
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/19.png)
 
 证明：
 
 已知
-$$
-c_1=m^{e_1 }  \;mod \;n  、  \quad c_2=m^{e_2 }  \;mod \;n 、\quad gcd⁡(e_1,e_2 )=1
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/20.png)
+
 得
-$$
-m=c_1^{d_1 } \;mod \;n   m=c_2^{d_2 } \;mod\; n
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/21.png)
+
 又因为
-$$
-ae_1+be_2=1
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/22.png)
+
 且
-$$
-c_1^a=m^{ae_1 } \; mod\; n 、\quad c_2^b=m^{be_2 } \; mod \;n
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/23.png)
+
 即
-$$
-c_1^a c_2^b≡m^{ae_1+be_2 }≡m \;mod\; n
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/24.png)
+
 可得
-$$
-m=c_1^a c_2^b  \;mod\; n
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/25.png)
+
 如果b为负数，将它转为正值并求c2的逆元 c^-1，即
-$$
-ae_1-be_2=1
-$$
 
-$$
-c_2^{-b}= (c_2^{-1})^b≡m^{-be_2 } \; mod\; n
-$$
-
-$$
-m=c_1^a (c_2^{-1})^b \; mod \;n
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/26.png)
 
 ## 3.2 例子
 
@@ -262,27 +228,20 @@ if __name__ == '__main__':
 
 ## 4.1 原理
 
-$$
-dp≡d\;mod\;φ(p)
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/27.png)
 
 两边乘e
-$$
-e×dp≡e×d\;mod\;φ(p) 、\quad e×d=k(p-1)+e×dp
-$$
 
-$$
-(ed)mod\;φ(n)=1      e×d=k(p-1)+e×dp=1+t(p-1)(q-1)
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/28.png)
 
 得
-$$
-e×dp=1+k(r-k)(p-1)，r=t(q-1)
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/29.png)
+
 观察等式，左边e∙dp是已知的，右边(p-1)比dp要大，则(r-k)必然比e小，我们从1到e枚举(r-k)=x，然后看e∙dp-1能否被x整除。如果能，则我们可以得到
-$$
-p-1=(e×dp-1)/x
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/30.png)
+
 接下来就可以把p,q都求出来，从而解密  其实可以直接暴力分解n得p,q（如果n可以分解的话）
 
 ## 4.2 例子
@@ -322,19 +281,15 @@ for x in range(1, e):
 ## 5.1 原理
 
 1、由于 
-$$
-c=m^e mod\;n
-$$
-  e很小，n很大，  有可能小于n，此时
-$$
-c=m^e
-$$
 
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/31.png)
+
+  e很小，n很大，  有可能小于n，此时 c=m^e
 
 2、当
-$$
-m^e>n，\quad m^e=kn+c
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/32.png)
+
   时，可以对k进行爆破
 
 ## 5.2 例子
@@ -374,65 +329,48 @@ while 1:
 一般的话e=k。 k是题目给出的n和c的组数。
 
 例如下面得就是e=k=3
-$$
-c_1=m^e mod\;n_1
-$$
 
-$$
-c_2=m^e mod\;n_2
-$$
-
-$$
-c_3=m^e mod\;n_3
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/33.png)
 
 使用不同模数n，相同的公钥指数e加密相同的信息。就会得到多个
-$$
-m^e≡c_i \;mod\;n_i
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/34.png)
+
 将m^e视为一个整体M，求得m^e的值，直接开e方即可。
 
 构造同余方程组：
-$$
-m^e≡c_1 \;mod\;n_1
-$$
 
-$$
-m^e≡c_2\; mod\;n_2
-$$
-
-$$
-m^e≡c_3 \;mod\;n_3
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/35.png)
 
 有唯一解，解为
-$$
-m^e=(c_1 N_1 N_1^{-1}+c_2 N_2 N_2^{-1}+c_2 N_2 N_2^{-1}  )\;mod\; N
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/36.png)
+
 其中
-$$
-N_i=N/n_i，\quad N=n_1*n_2*n_3，N_i^{-1}\;为\;N_i \; mod \;n_i的逆元
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/37.png)
+
+
+
 证明如下：
 
 Ni的因数中包含除了ni其他所有模数，因此对其他所有模数取模都为0
 
 例如
-$$
-N_1=n_2×n_3
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/38.png)
+
 所以
-$$
-c_1 N_1 N_1^{-1} \; mod\; n_2≡0 ，\quad   c_1 N_1 N_1^{-1} \; mod\; n_3≡0
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/39.png)
+
 由于
-$$
-N_i^{-1}\;为\;N_i  \;mod\; n_i\;的逆元，N_i N_i^{-1}≡1\; mod\; n_i\; 得 \;c_i N_i N_i^{-1}≡c_i \; mod\; n_i
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/40.png)
+
 分析一下这样构造的解M中每一项的系数，对所有的i，
-$$
-m^e≡c_i \;mod\;n_i\;都成立，m^e\;是该方程组的解
-$$
+
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/41.png)
 
 ## 6.2、例子
 
@@ -487,31 +425,11 @@ if __name__ == "__main__":
 
 参考链接：https://blog.csdn.net/weixin_46395886/article/details/114757828
 
-
-$$
-由\;ab=1\;mod\;n\;可知，存在整数\;t，满足\; ab-tϕ(n)=1
-$$
-
-$$
-由于n = p q > q^2 ，即q <\sqrt{n}。所以
-$$
-
-$$
-0<n−ϕ(n)=p+q−1<2q+q−1<3q<3 n
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/42.png)
 
 所以有下面计算：
-$$
-∣\frac{b}{n}−\frac{t}{a}∣= ∣\frac{ba−tn}{an}∣=∣\frac{1+t(ϕ(n)−n)}{an}∣ < \frac{3t\sqrt{n}}{an} = \frac{3t}{a\sqrt{n}}
-$$
 
-$$
-由于t < a，所以3t<3a<n^{\frac{1}{4}}，因此，|{\frac{b}{n}}-{\frac{t}{a}}|<{\frac{1}{an^{\frac{1}{4}}}}
-$$
-
-$$
-最后由于3a <n^{\frac{1}{4}}，因此，|{\frac{b}{n}}-{\frac{t}{a}}|<{\frac{1}{3a^2}}
-$$
+![](https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/RSA/43.png)
 
 由连分数的理论可知，此时 t/a 是b/n 的一个收敛子。因为n和b都是公开的，计算收敛子是容易的。我们只要计算出 b/n 的所有的收敛子，看哪个收敛子能够分解n 。因为如果 t/a 是收敛子，我们就有了a 和t 的值，依据ϕ ( n ) = ( a b − 1 ) 就可以计算出ϕ ( n )，进而可以解一元二次方程求出p，以此为判断依据确定哪个收敛子才是真正的 t 和a 。
 
