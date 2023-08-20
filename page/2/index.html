@@ -227,12 +227,12 @@
                 <div class="author">
                     <div class="name">wutong</div>
                     
-                        <div class="label">Lv2</div>
+                        <div class="label">Lv3</div>
                     
                 </div>
                 <div class="statistics">
                     <a class="item" href="/tags">
-                        <div class="number">13</div>
+                        <div class="number">15</div>
                         <div class="label">Tags</div>
                     </a>
                     <a class="item" href="/categories">
@@ -240,7 +240,7 @@
                         <div class="label">Categories</div>
                     </a>
                     <a class="item" href="/archives">
-                        <div class="number">11</div>
+                        <div class="number">16</div>
                         <div class="label">Posts</div>
                     </a>
                 </div>
@@ -257,6 +257,390 @@
                 
                     <div class="home-content-container fade-in-down-animation">
     <ul class="home-article-list">
+        
+            <li class="home-article-item">
+
+                
+
+                
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/13/ret2dlruntime/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dlruncover.jpg" alt="栈迁移+ret2_dl_runtime_reslove" />
+                        </a>
+                    </div>
+                
+
+                <h3 class="home-article-title">
+                    <a href="/2023/07/13/ret2dlruntime/">
+                        栈迁移+ret2_dl_runtime_reslove
+                    </a>
+                </h3>
+
+                <div class="home-article-content markdown-body">
+                    
+                        在之前的博客中，我们介绍了延迟绑定机制 。我们知道在linux中是利用_dl_runtime_resolve(link_map_obj, reloc_index)来对动态链接的函数进行重定位的，如果我们可以控制相应的参数及其对应地址内容，就可以控制解...
+                    
+                </div>
+
+                <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Thu Jul 13 2023 14:05:54 GMT+0800">
+                
+                    2023-07-13
+                
+            </span>
+        </span>
+        
+            <span class="home-article-category"><i class="fa-solid fa-folders"></i></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/categories/Study/">Study</a>&nbsp;
+                        </li>
+                    
+                    
+                </ul>
+            </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/ret2-dl-runtime-resolve/">ret2_dl_runtime_resolve</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2023/07/13/ret2dlruntime/">Read more<span class="seo-reader-text">栈迁移+ret2_dl_runtime_reslove</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/11/ret2csu/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2csucover.jpg" alt="ret2csu" />
+                        </a>
+                    </div>
+                
+
+                <h3 class="home-article-title">
+                    <a href="/2023/07/11/ret2csu/">
+                        ret2csu
+                    </a>
+                </h3>
+
+                <div class="home-article-content markdown-body">
+                    
+                        在x64中，在 64 位程序中，函数的前 6 个参数是通过寄存器传递的，但是大多数时候，我们很难找到每一个寄存器对应的gadgets。这时，我们就要开始考虑通过调用__libc_csu_init函数来实现传递参数的效果，这种实现方式，称为 ret2c...
+                    
+                </div>
+
+                <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Tue Jul 11 2023 14:04:22 GMT+0800">
+                
+                    2023-07-11
+                
+            </span>
+        </span>
+        
+            <span class="home-article-category"><i class="fa-solid fa-folders"></i></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/categories/Study/">Study</a>&nbsp;
+                        </li>
+                    
+                    
+                </ul>
+            </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/ret2csu/">ret2csu</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2023/07/11/ret2csu/">Read more<span class="seo-reader-text">ret2csu</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/09/ret2syscall/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2syscover.jpg" alt="ret2syscall+mprotect函数介绍" />
+                        </a>
+                    </div>
+                
+
+                <h3 class="home-article-title">
+                    <a href="/2023/07/09/ret2syscall/">
+                        ret2syscall+mprotect函数介绍
+                    </a>
+                </h3>
+
+                <div class="home-article-content markdown-body">
+                    
+                        ret2syscall 即控制程序执行系统调用来获取 shell。当发现没有system可以直接调用，并且发现通过函数泄露地址去猜libc也不太适用，没法泄露和计算libc的加载基地址的时候，就要使用ret2syscall。
+一、ret2syscal...
+                    
+                </div>
+
+                <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Sun Jul 09 2023 21:49:25 GMT+0800">
+                
+                    2023-07-09
+                
+            </span>
+        </span>
+        
+            <span class="home-article-category"><i class="fa-solid fa-folders"></i></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/categories/Study/">Study</a>&nbsp;
+                        </li>
+                    
+                    
+                </ul>
+            </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/ret2syscall/">ret2syscall</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2023/07/09/ret2syscall/">Read more<span class="seo-reader-text">ret2syscall+mprotect函数介绍</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/07/ret2libc/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2libcover.jpg" alt="ret2libc+延迟绑定机制" />
+                        </a>
+                    </div>
+                
+
+                <h3 class="home-article-title">
+                    <a href="/2023/07/07/ret2libc/">
+                        ret2libc+延迟绑定机制
+                    </a>
+                </h3>
+
+                <div class="home-article-content markdown-body">
+                    
+                        在上一篇博客，我们介绍了栈溢出基本原理。 通过劫持返回地址，可以使程序转去执行我们构造好的system函数，进而执行攻击。但如果没有直接的后门，且没有直接发现system函数该怎么办呢？我们需要知道：system 函数属于 libc，而 libc.s...
+                    
+                </div>
+
+                <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Fri Jul 07 2023 18:29:01 GMT+0800">
+                
+                    2023-07-07
+                
+            </span>
+        </span>
+        
+            <span class="home-article-category"><i class="fa-solid fa-folders"></i></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/categories/Study/">Study</a>&nbsp;
+                        </li>
+                    
+                    
+                </ul>
+            </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/ret2libc/">ret2libc</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2023/07/07/ret2libc/">Read more<span class="seo-reader-text">ret2libc+延迟绑定机制</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+            </li>
+        
+            <li class="home-article-item">
+
+                
+
+                
+                    <div class="home-article-thumbnail">
+                        <a href="/2023/07/05/stack/">
+                            <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/stackcover.jpg" alt="栈溢出基础知识+函数调用过程" />
+                        </a>
+                    </div>
+                
+
+                <h3 class="home-article-title">
+                    <a href="/2023/07/05/stack/">
+                        栈溢出基础知识+函数调用过程
+                    </a>
+                </h3>
+
+                <div class="home-article-content markdown-body">
+                    
+                        
+在函数调用过程中，栈（Stack）扮演着重要的角色。它在内存中用于管理函数调用的相关信息，包括参数传递、返回地址和局部变量等。栈的主要作用：
+
+保存参数：当一个函数被调用时，函数的参数会被压入栈中。这样做的目的是为了将函数调用所需的参数传递给被调用...
+                    
+                </div>
+
+                <div class="home-article-meta-info-container">
+    <div class="home-article-meta-info">
+        <span><i class="fa-solid fa-calendars"></i>&nbsp;
+            <span class="home-article-date" data-date="Wed Jul 05 2023 22:19:26 GMT+0800">
+                
+                    2023-07-05
+                
+            </span>
+        </span>
+        
+            <span class="home-article-category"><i class="fa-solid fa-folders"></i></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/categories/Study/">Study</a>&nbsp;
+                        </li>
+                    
+                    
+                </ul>
+            </span>
+        
+        
+            <span class="home-article-tag">
+                <i class="fa-solid fa-tags"></i>&nbsp;
+                <ul>
+                    
+                        <li>
+                            
+                            <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Stack/">Stack</a>&nbsp;
+                        </li>
+                    
+                        <li>
+                            | 
+                            <a href="/tags/Basic-Knowledge/">Basic Knowledge</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            </span>
+        
+    </div>
+
+    <a href="/2023/07/05/stack/">Read more<span class="seo-reader-text">栈溢出基础知识+函数调用过程</span>&nbsp;<i class="fa-solid fa-angle-right"></i></a>
+</div>
+
+            </li>
         
             <li class="home-article-item">
 
