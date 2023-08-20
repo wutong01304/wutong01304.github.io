@@ -18,5 +18,8 @@ function footerRuntime() {
     runtime_seconds.innerHTML = D;
 }
 
-
-window.addEventListener('DOMContentLoaded', footerRuntime);
+if (Global.theme_config.global.pjax === true && Global.utils) {
+    footerRuntime();
+} else {
+    window.addEventListener('DOMContentLoaded', footerRuntime);
+}

@@ -35,8 +35,8 @@ function initTocToggle() {
   Global.utils.TocToggle.initToggleBarButton();
 }
 
-swup.on('pageView', () => {
+if (Global.theme_config.global.pjax === true && Global.utils) {
   initTocToggle();
-});
-
-window.addEventListener('DOMContentLoaded', initTocToggle);
+} else {
+  window.addEventListener('DOMContentLoaded', initTocToggle);
+}
